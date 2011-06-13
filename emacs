@@ -52,9 +52,9 @@
 (add-to-list 'load-path "/opt/local/share/emacs/site-lisp/slime/")
 (setq inferior-lisp-program "~/LISP-SBCL/bin/sbcl")
 (setq slime-lisp-implementations `((sbcl ("~/LISP-SBCL/bin/sbcl"))))
-(require 'slime)
+;(require 'slime)
 ;(require 'slime-editing-commands)
-(slime-setup '(slime-repl slime-asdf slime-fancy slime-banner))
+;(slime-setup '(slime-repl slime-asdf slime-fancy slime-banner))
 
 
 (setq load-path (cons "~/.emacs.d/org-7.5/lisp" load-path))
