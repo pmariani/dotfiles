@@ -87,3 +87,7 @@
 
 (add-to-list 'load-path "~/emacs-libs/emacs-jabber-0.8.0/")
 (require 'jabber-autoloads)
+
+;; org-mode config
+;;; add timestamp when item is marked 'done'
+(setq org-log-done 'time)
