@@ -79,7 +79,6 @@
 ;;                                                          (lisp . t)
 ;;                                                          (emacs-lisp . t)))
 
-
 (add-to-list 'load-path "~/emacs-libs/")
 (require 'php-mode)
 ;; allows autocompletion of php functions
