@@ -1,3 +1,6 @@
+;; set cursor color
+(set-cursor-color "#f88")
+
 ;; highlight current line
 (global-hl-line-mode 1)
 
@@ -54,10 +57,6 @@
 (if (file-exists-p "~/.emacs.d/android-mode.el")
     (load-file "~/.emacs.d/android-mode.el"))
 
-;; (setenv "PATH" (concat
-;; 	"/usr/local/git/bin:~/Code/Android/sdk/tools:~/Code/Android/sdk/platform-tools/:/opt/local/bin/:"
-;; 	(getenv "PATH")))
-
 ;; (setenv "SBCL_HOME" '"~/LISP-SBCL/lib/sbcl")
 
 ;; (add-to-list 'load-path "/opt/local/share/emacs/site-lisp/slime/")
@@ -82,3 +81,14 @@
 ;; org-mode config
 ;;; add timestamp when item is marked 'done'
 (setq org-log-done 'time)
+
+;; setup spell program on mac
+(setq ispell-program-name "aspell"
+      ispell-dictionary "english"
+      ispell-dictionary-alist
+      (let ((default '("[A-Za-z]" "[^A-Za-z]" "[']" nil
+                       ("-B" "-d" "english" "--dict-dir"
+                        "/Library/Application Support/cocoAspell/aspell6-en-6.0-0")
+                       nil iso-8859-1)))
+        `((nil ,@default)
+          ("english" ,@default))))
