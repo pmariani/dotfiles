@@ -1,3 +1,13 @@
+;; use hooks to enable all minor modes I want
+;; maybe I can use a very general hook to effectively enable them all by default
+;; also should allow me to turn off abbrev
+
+;; enable hs-minor-mode (hide/show blocks)
+;; (hs-minor-mode t)
+
+;; add column number to mode line
+;; (setq column-number-mode t)
+
 ;; set cursor color
 (set-cursor-color "#f88")
 
