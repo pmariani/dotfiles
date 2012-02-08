@@ -22,6 +22,7 @@
 
 ;; exec path on mac os x
 (add-to-list 'exec-path "/usr/local/bin/")
+(add-to-list 'exec-path "/usr/texbin/")
 
 ;; do not truncate long lines
 (toggle-truncate-lines nil)
@@ -78,7 +79,6 @@
 ;(require 'slime-editing-commands)
 ;(slime-setup '(slime-repl slime-asdf slime-fancy slime-banner))
 
-
 ;; (setq load-path (cons "~/.emacs.d/org-7.5/lisp" load-path))
 ;; (setq load-path (cons "~/.emacs.d/org-7.5/contrib/lisp" load-path))
 ;; (require 'org-install)
@@ -102,3 +102,6 @@
                        nil iso-8859-1)))
         `((nil ,@default)
           ("english" ,@default))))
+
+;; turn on auto-fill when turning on text-mode
+(add-hook 'text-mode-hook 'turn-on-auto-fill)
