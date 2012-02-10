@@ -105,3 +105,5 @@
 
 ;; turn on auto-fill when turning on text-mode
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
+
+(add-hook 'js-mode-hook 'hs-minor-mode)
