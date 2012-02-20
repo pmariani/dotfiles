@@ -107,3 +107,9 @@
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
 (add-hook 'js-mode-hook 'hs-minor-mode)
+
+(require 'whitespace)
+(autoload 'whitespace-mode "whitespace" "Toggle whitespace visualization." t)
+(global-whitespace-mode 1)
+(setq whitespace-line nil)
+(setq whitespace-style (delq 'newline-mark whitespace-style))
