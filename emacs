@@ -2,9 +2,6 @@
 ;; maybe I can use a very general hook to effectively enable them all by default
 ;; also should allow me to turn off abbrev
 
-;; enable hs-minor-mode (hide/show blocks)
-;; (hs-minor-mode t)
-
 ;; add column number to mode line
 ;; (setq column-number-mode t)
 
@@ -106,7 +103,12 @@
 ;; turn on auto-fill when turning on text-mode
 (add-hook 'text-mode-hook 'turn-on-auto-fill)
 
-(add-hook 'js-mode-hook 'hs-minor-mode)
+(defun hs-on ()
+  (hs-minor-mode t))
+
+(add-hook 'js-mode-hook 'hs-on)
+(add-hook 'php-mode-hook 'hs-on)
+(add-hook 'php-mode-hook 'turn-on-auto-fill)
 
 (require 'whitespace)
 (autoload 'whitespace-mode "whitespace" "Toggle whitespace visualization." t)
