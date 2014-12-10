@@ -19,3 +19,7 @@ set softtabstop=2
 set shiftwidth=2
 filetype plugin indent on
 syntax on
+set nowrap
+if has("autocmd")
+    au BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
