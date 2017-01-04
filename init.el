@@ -41,6 +41,7 @@
 (global-unset-key (kbd "s-w"))  ;; AppleKey-w: delete-frame
 (global-unset-key (kbd "s-p"))  ;; AppleKey-p: ns-print-buffer
 (global-unset-key (kbd "s-t"))  ;; AppleKey-t: ns-popup-font-panel
+(global-unset-key (kbd "C-t"))  ;; Transpose chars
 
 ;; Transparency
 (add-to-list 'default-frame-alist '(alpha . (89 . 70)))
@@ -96,3 +97,21 @@
    "pbcopy"))
 
 (global-set-key (kbd "<f8>") 'copy-region-to-os-pasteboard)
+
+;; Make Tramp use the PATH of the remote user
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+;; History of input
+(defvar history-of-vagrant-directories nil)
+(eval-after-load "savehist"
+  '(add-to-list 'savehist-additional-variables 'history-of-vagrant-directories))
+
+;; Function to run tox
+(defun run-tox-on-dir (directory-name)
+  (interactive
+   (list (read-from-minibuffer "run tox on " (car history-of-vagrant-directories) nil nil 'history-of-vagrant-directories)))
+  (let ((default-directory (concat "/ssh:vagrant:/vagrant/" directory-name)))
+    (shell-command "tox &")))
+
+;; Keybinding for tox
+(global-set-key (kbd "C-t") 'run-tox-on-dir)
