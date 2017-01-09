@@ -66,6 +66,9 @@
 (use-package flycheck-pyflakes
   :ensure t)
 
+(use-package markdown-mode
+  :ensure t)
+
 ;; Python:
 ;; brew install python3
 ;; virtualenv --python python3 ~/.emacs.d/python_venv
