@@ -44,7 +44,7 @@
 (global-unset-key (kbd "C-t"))  ;; Transpose chars
 
 ;; Transparency
-(add-to-list 'default-frame-alist '(alpha . (89 . 70)))
+;; (add-to-list 'default-frame-alist '(alpha . (100 . 100)))
 
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
@@ -69,6 +69,14 @@
 (use-package markdown-mode
   :ensure t)
 
+(use-package zenburn-theme
+  :ensure t)
+
+(use-package fic-mode
+  :ensure t)
+
+
+
 ;; Python:
 ;; brew install python3
 ;; virtualenv --python python3 ~/.emacs.d/python_venv
@@ -89,6 +97,7 @@
   :config
   (add-hook 'elpy-mode-hook (lambda ()
 			      (hs-minor-mode t)
+			      (fic-mode t)
 			      (set-fill-column 100)))
   (elpy-enable))
 
@@ -118,3 +127,5 @@
 
 ;; Keybinding for tox
 (global-set-key (kbd "C-t") 'run-tox-on-dir)
+
+(server-start)
