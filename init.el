@@ -72,12 +72,7 @@
 (use-package zenburn-theme
   :ensure t)
 
-(use-package fic-mode
-  :ensure t)
-
-
-
-;; Python:
+;; python:
 ;; brew install python3
 ;; virtualenv --python python3 ~/.emacs.d/python_venv
 ;; source ~/.emacs.d/python_venv/bin/activate
@@ -97,7 +92,6 @@
   :config
   (add-hook 'elpy-mode-hook (lambda ()
 			      (hs-minor-mode t)
-			      (fic-mode t)
 			      (set-fill-column 100)))
   (elpy-enable))
 
@@ -129,3 +123,14 @@
 (global-set-key (kbd "C-t") 'run-tox-on-dir)
 
 (server-start)
+
+;; Org mode
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cc" 'org-capture)
+(global-set-key "\C-cb" 'org-iswitchb)
+
+(customize-set-variable 'org-default-notes-file "~/org/notes.org")
+(customize-set-variable 'org-capture-templates
+			'(
+			  ("n" "Captured Note" entry (file+headline org-default-notes-file "Captured Notes") "")))
