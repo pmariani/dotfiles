@@ -72,6 +72,21 @@
 (use-package zenburn-theme
   :ensure t)
 
+(use-package yaml-mode
+  :ensure t)
+
+(use-package magit
+  :ensure t)
+
+(use-package dired
+  :init
+  (add-hook 'after-init-hook '(lambda () (require 'dired-x)))
+  (customize-set-variable 'dired-omit-files "^\\.?#\\|^\\.$\\|^__pycache__$")
+  (setq dired-omit-mode t))
+
+(use-package json-mode
+  :ensure t)
+
 ;; python:
 ;; brew install python3
 ;; virtualenv --python python3 ~/.emacs.d/python_venv
@@ -94,6 +109,8 @@
 			      (hs-minor-mode t)
 			      (set-fill-column 100)))
   (elpy-enable))
+(customize-set-variable 'elpy-disable-backend-error-display nil)
+
 
 (defun copy-region-to-os-pasteboard ()
   (interactive)
@@ -134,3 +151,11 @@
 (customize-set-variable 'org-capture-templates
 			'(
 			  ("n" "Captured Note" entry (file+headline org-default-notes-file "Captured Notes") "")))
+(customize-save-variable 'epg-gpg-program "/usr/local/bin/gpg2") ;; add pinentry-mode loopback to ~/.gnupg/gpg.conf
+(customize-set-variable 'org-crypt-key "")
+(customize-set-variable 'org-tags-exclude-from-inheritance '("crypt"))
+
+(use-package org-crypt
+  :config (org-crypt-use-before-save-magic))
+
+(customize-set-variable 'safe-local-variable-values '((buffer-auto-save-file-name)))

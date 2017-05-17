@@ -4,4 +4,5 @@ elpa
 python_venv
 tramp
 bookmarks
-
+eshell
+.emacs.desktop.lock
