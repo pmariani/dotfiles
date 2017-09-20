@@ -1,12 +1,12 @@
-;; Start the daemon with /Applications/Emacs.app/Contents/MacOS/Emacs-x86_64-10_9 --daemon
-
+(set-language-environment "UTF-8")
+(customize-set-variable 'exec-path (append exec-path '("/usr/local/bin")))
 (require 'package)
 (setq package-enable-at-startup nil)
 
 (add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
+	     '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives
-             '("elpy" . "http://jorgenschaefer.github.io/packages/"))
+	     '("elpy" . "http://jorgenschaefer.github.io/packages/"))
 
 (package-initialize)
 
@@ -43,9 +43,6 @@
 (global-unset-key (kbd "s-t"))  ;; AppleKey-t: ns-popup-font-panel
 (global-unset-key (kbd "C-t"))  ;; Transpose chars
 
-;; Transparency
-;; (add-to-list 'default-frame-alist '(alpha . (100 . 100)))
-
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
 
@@ -67,9 +64,6 @@
   :ensure t)
 
 (use-package markdown-mode
-  :ensure t)
-
-(use-package zenburn-theme
   :ensure t)
 
 (use-package yaml-mode
@@ -103,7 +97,7 @@
 		       elpy-module-flymake
 		       elpy-module-sane-defaults))
   (pyvenv-activate "~/.emacs.d/python_venv")
-  
+
   :config
   (add-hook 'elpy-mode-hook (lambda ()
 			      (hs-minor-mode t)
@@ -139,8 +133,6 @@
 ;; Keybinding for tox
 (global-set-key (kbd "C-t") 'run-tox-on-dir)
 
-(server-start)
-
 ;; Org mode
 (global-set-key "\C-cl" 'org-store-link)
 (global-set-key "\C-ca" 'org-agenda)
@@ -159,3 +151,142 @@
   :config (org-crypt-use-before-save-magic))
 
 (customize-set-variable 'safe-local-variable-values '((buffer-auto-save-file-name)))
+
+
+;;;;;;;;;;
+;; MU4E ;;
+;;;;;;;;;;
+;; Had to manually edit offlineimap to force it to use python2.7
+
+;;; Helper functions
+(when (fboundp 'imagemagick-register-types)
+  (imagemagick-register-types))
+
+(defun get-email-address (one-account-definition)
+  (cdr (assoc :email-address one-account-definition)))
+
+(defun get-context-name (one-account-definition)
+  (cdr (assoc :name one-account-definition)))
+
+(defun get-folders (one-account-definition)
+  (cdr (assoc :folders one-account-definition)))
+
+(defun get-maildir (folder)
+  (cdr (assoc :maildir folder)))
+
+(defun get-name (folder)
+  (cdr (assoc :name folder)))
+
+(defun get-shortcut (folder)
+  (cdr (assoc :shortcut folder)))
+
+(defun build-maildir-clause (email-address maildir)
+  (concat "maildir:/" email-address maildir))
+
+(defun unread-messages-query (account-definitions)
+  (let* ((email-addresses (mapcar #'get-email-address account-definitions))
+	 (maildirs (mapcar (lambda (email-address) (build-maildir-clause email-address "/INBOX")) email-addresses))
+	 (joined-maildirs (mapconcat 'identity maildirs " OR ")))
+    (concat "flag:unread AND (" joined-maildirs ")")))
+
+(defun ~make-context-maildir-shortcuts (folders email-address)
+  (let* ((inbox-shortcut `(,(concat "/" email-address "/INBOX") . ?i))
+	 (dynamic-shortcuts (mapcar (lambda (folder)
+				      `(,(concat "/" email-address (get-maildir folder)) . ,(get-shortcut folder)))
+				    folders)))
+    (append `(,inbox-shortcut)
+	    dynamic-shortcuts)))
+
+(defun ~make-context-vars (folders email-address)
+  `((mu4e-drafts-folder . ,(concat "/" email-address "/[Gmail].Drafts"))
+    (mu4e-refile-folder . ,(concat "/" email-address "/[Gmail].Archive"))
+    (mu4e-sent-folder   . ,(concat "/" email-address "/[Gmail].Sent Mail"))
+    (mu4e-trash-folder  . ,(concat "/" email-address "/[Gmail].Trash"))
+    (smtpmail-smtp-user . ,email-address)
+    (user-mail-address  . ,email-address)
+    (mu4e-maildir-shortcuts . ,(~make-context-maildir-shortcuts folders email-address))))
+
+(defun ~make-context (one-account-definition)
+  (let* ((context-name (get-context-name one-account-definition))
+	 (folders (get-folders one-account-definition)))
+    (lexical-let ((email-address (get-email-address one-account-definition)))
+      (make-mu4e-context
+       :name context-name
+       :match-func (lambda (message) (when message
+				       (string-prefix-p
+					(concat "/" email-address "/")
+					(mu4e-message-field message :maildir))))
+       :vars (~make-context-vars folders email-address)))))
+
+(defun make-contexts (account-definitions)
+  (mapcar #'~make-context account-definitions))
+
+(defun ~make-bookmark-for-folder (folder email-address)
+  (make-mu4e-bookmark
+   :name (get-name folder)
+   :query (build-maildir-clause email-address (get-maildir folder))
+   :key (get-shortcut folder)))
+
+(defun ~make-bookmarks-for-account (one-account-definition)
+  (let ((email-address (get-email-address one-account-definition))
+	(folders (get-folders one-account-definition)))
+    (mapcar (lambda (folder) (~make-bookmark-for-folder folder email-address))
+	    folders)))
+
+(defun make-bookmarks (account-definitions)
+  (let* ((unread-messages-bookmark (make-mu4e-bookmark
+				    :name  "Unread messages"
+				    :query (unread-messages-query account-definitions)
+				    :key ?u))
+	 (nested-bookmarks (mapcar #'~make-bookmarks-for-account account-definitions))
+	 (bookmarks (apply #'append nested-bookmarks)))
+    (append `(,unread-messages-bookmark) bookmarks)))
+
+;;; Definitions
+(setq *ACCOUNT-DEFINITIONS*
+      '(((:email-address . "foo")
+	 (:name . "Personal")
+	 (:folders . (((:name . "BJJ log")
+		       (:maildir . "/[Gmail].bjj_log")
+		       (:shortcut . ?b))
+		      ((:name . "Workout log")
+		       (:maildir . "/[Gmail].workout_log")
+		       (:shortcut . ?w))
+		      ((:name . "House remodel")
+		       (:maildir . "/[Gmail].house_remodel")
+		       (:shortcut . ?h)))))
+	((:email-address . "bar")
+	 (:name . "Work")
+	 (:folders . (((:name . "SOC 2")
+		       (:maildir . "/[Gmail].soc")
+		       (:shortcut . ?s))
+		      ((:name . "Usage Service")
+		       (:maildir . "/[Gmail].usage_service")
+		       (:shortcut . ?U)))))))
+
+(use-package mu4e
+  :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
+  :config
+  (customize-set-variable 'mu4e-maildir                 "~/.Mail")
+  (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
+  (customize-set-variable 'mu4e-sent-messages-behavior 'delete)
+  (customize-set-variable 'mu4e-show-images             t)
+  (customize-set-variable 'mu4e-update-interval         300)
+  (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
+  (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
+  (customize-set-variable 'user-full-name               "Pierre Mariani")
+  (customize-set-variable 'smtpmail-smtp-service        587)
+  (customize-set-variable 'smtpmail-stream-type         'starttls)
+  (customize-set-variable 'message-kill-buffer-on-exit  t)
+  (customize-set-variable 'mu4e-bookmarks (make-bookmarks *ACCOUNT-DEFINITIONS*))
+  (customize-set-variable 'mu4e-contexts (make-contexts *ACCOUNT-DEFINITIONS*))
+  (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t))
+
+(use-package mu4e-alert
+  :ensure t
+  :after mu4e
+  :init
+  (customize-set-variable 'mu4e-alert-interesting-mail-query (unread-messages-query *ACCOUNT-DEFINITIONS*))
+  (mu4e-alert-set-default-style 'notifier)
+  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
