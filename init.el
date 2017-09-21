@@ -165,7 +165,7 @@
   (imagemagick-register-types))
 
 (defun unread-messages-query (account-definitions)
-  (let* ((inboxes (mapcar (lambda (one-account) (concat "maildir": (account-inbox one-account))) account-definitions))
+  (let* ((inboxes (mapcar (lambda (one-account) (concat "maildir:" (account-inbox one-account))) account-definitions))
 	 (joined-maildirs (mapconcat 'identity inboxes " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
@@ -198,7 +198,7 @@
   (mapcar (lambda (folder) (make-mu4e-bookmark
 			    :name (folder-name folder)
 			    :query (concat "maildir:" (folder-full-maildir folder))
-			    :key (folder-shortcut folder))
+			    :key (folder-shortcut folder)))
 	  (account-folders one-account-definition)))
 
 (defun make-bookmarks (account-definitions)
@@ -209,9 +209,13 @@
 	 (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
     (cons unread-messages-bookmark bookmarks)))
 
+;; Structures
+(cl-defstruct folder name maildir shortcut full-maildir)
+(cl-defstruct account email-address name folders inbox drafts refile sent trash)
+
 (defun compute-account-definitions-fields (account-definitions)
   (seq-do (lambda (one-account)
-	    (lexical-let ((email-address (account-email-address one-account)))
+	    (let ((email-address (account-email-address one-account)))
 	      (progn
 		(setf (account-inbox one-account) (concat "/" email-address "/INBOX"))
 		(setf (account-drafts one-account) (concat "/" email-address "/[Gmail].Drafts"))
@@ -222,10 +226,6 @@
 			  (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
 			(account-folders one-account)))))
 	  account-definitions))
-
-;; Structures
-(cl-defstruct folder name maildir shortcut full-maildir)
-(cl-defstruct account email-address name folders inbox drafts refile sent trash)
 
 ;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
