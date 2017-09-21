@@ -158,58 +158,41 @@
 ;;;;;;;;;;
 ;; Had to manually edit offlineimap to force it to use python2.7
 
+(require 'cl-lib)
+
 ;;; Helper functions
 (when (fboundp 'imagemagick-register-types)
   (imagemagick-register-types))
-
-(defun get-email-address (one-account-definition)
-  (cdr (assoc :email-address one-account-definition)))
-
-(defun get-context-name (one-account-definition)
-  (cdr (assoc :name one-account-definition)))
-
-(defun get-folders (one-account-definition)
-  (cdr (assoc :folders one-account-definition)))
-
-(defun get-maildir (folder)
-  (cdr (assoc :maildir folder)))
-
-(defun get-name (folder)
-  (cdr (assoc :name folder)))
-
-(defun get-shortcut (folder)
-  (cdr (assoc :shortcut folder)))
 
 (defun build-maildir-clause (email-address maildir)
   (concat "maildir:/" email-address maildir))
 
 (defun unread-messages-query (account-definitions)
-  (let* ((email-addresses (mapcar #'get-email-address account-definitions))
+  (let* ((email-addresses (mapcar #'account-email-address account-definitions))
 	 (maildirs (mapcar (lambda (email-address) (build-maildir-clause email-address "/INBOX")) email-addresses))
 	 (joined-maildirs (mapconcat 'identity maildirs " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
 (defun ~make-context-maildir-shortcuts (folders email-address)
-  (let* ((inbox-shortcut `(,(concat "/" email-address "/INBOX") . ?i))
+  (let* ((inbox-shortcut (cons (concat "/" email-address "/INBOX") ?i))
 	 (dynamic-shortcuts (mapcar (lambda (folder)
-				      `(,(concat "/" email-address (get-maildir folder)) . ,(get-shortcut folder)))
+				      (cons (concat "/" email-address (folder-maildir folder)) (folder-shortcut folder)))
 				    folders)))
-    (append `(,inbox-shortcut)
-	    dynamic-shortcuts)))
+    (cons inbox-shortcut dynamic-shortcuts)))
 
 (defun ~make-context-vars (folders email-address)
-  `((mu4e-drafts-folder . ,(concat "/" email-address "/[Gmail].Drafts"))
-    (mu4e-refile-folder . ,(concat "/" email-address "/[Gmail].Archive"))
-    (mu4e-sent-folder   . ,(concat "/" email-address "/[Gmail].Sent Mail"))
-    (mu4e-trash-folder  . ,(concat "/" email-address "/[Gmail].Trash"))
-    (smtpmail-smtp-user . ,email-address)
-    (user-mail-address  . ,email-address)
-    (mu4e-maildir-shortcuts . ,(~make-context-maildir-shortcuts folders email-address))))
+  (list (cons 'mu4e-drafts-folder (concat "/" email-address "/[Gmail].Drafts"))
+	(cons 'mu4e-refile-folder (concat "/" email-address "/[Gmail].Archive"))
+	(cons 'mu4e-sent-folder   (concat "/" email-address "/[Gmail].Sent Mail"))
+	(cons 'mu4e-trash-folder  (concat "/" email-address "/[Gmail].Trash"))
+	(cons 'smtpmail-smtp-user email-address)
+	(cons 'user-mail-address  email-address)
+	(cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts folders email-address))))
 
 (defun ~make-context (one-account-definition)
-  (let* ((context-name (get-context-name one-account-definition))
-	 (folders (get-folders one-account-definition)))
-    (lexical-let ((email-address (get-email-address one-account-definition)))
+  (let* ((context-name (account-name one-account-definition))
+	 (folders (account-folders one-account-definition)))
+    (lexical-let ((email-address (account-email-address one-account-definition)))
       (make-mu4e-context
        :name context-name
        :match-func (lambda (message) (when message
@@ -223,46 +206,37 @@
 
 (defun ~make-bookmark-for-folder (folder email-address)
   (make-mu4e-bookmark
-   :name (get-name folder)
-   :query (build-maildir-clause email-address (get-maildir folder))
-   :key (get-shortcut folder)))
+   :name (folder-name folder)
+   :query (build-maildir-clause email-address (folder-maildir folder))
+   :key (folder-shortcut folder)))
 
 (defun ~make-bookmarks-for-account (one-account-definition)
-  (let ((email-address (get-email-address one-account-definition))
-	(folders (get-folders one-account-definition)))
-    (mapcar (lambda (folder) (~make-bookmark-for-folder folder email-address))
-	    folders)))
+  (mapcar (lambda (folder) (~make-bookmark-for-folder folder (account-email-address one-account-definition)))
+	  (account-folders one-account-definition)))
 
 (defun make-bookmarks (account-definitions)
   (let* ((unread-messages-bookmark (make-mu4e-bookmark
 				    :name  "Unread messages"
 				    :query (unread-messages-query account-definitions)
 				    :key ?u))
-	 (nested-bookmarks (mapcar #'~make-bookmarks-for-account account-definitions))
-	 (bookmarks (apply #'append nested-bookmarks)))
-    (append `(,unread-messages-bookmark) bookmarks)))
+	 (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
+    (cons unread-messages-bookmark bookmarks)))
 
-;;; Definitions
+;; Structures
+(cl-defstruct folder name maildir shortcut)
+(cl-defstruct account email-address name folders)
+
+;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
-      '(((:email-address . "foo")
-	 (:name . "Personal")
-	 (:folders . (((:name . "BJJ log")
-		       (:maildir . "/[Gmail].bjj_log")
-		       (:shortcut . ?b))
-		      ((:name . "Workout log")
-		       (:maildir . "/[Gmail].workout_log")
-		       (:shortcut . ?w))
-		      ((:name . "House remodel")
-		       (:maildir . "/[Gmail].house_remodel")
-		       (:shortcut . ?h)))))
-	((:email-address . "bar")
-	 (:name . "Work")
-	 (:folders . (((:name . "SOC 2")
-		       (:maildir . "/[Gmail].soc")
-		       (:shortcut . ?s))
-		      ((:name . "Usage Service")
-		       (:maildir . "/[Gmail].usage_service")
-		       (:shortcut . ?U)))))))
+      (list (make-account :email-address "foo"
+			  :name          "Personal"
+			  :folders       (list (make-folder :name "BJJ log"       :maildir "/[Gmail].bjj_log"       :shortcut ?b)
+					       (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
+					       (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
+	    (make-account :email-address "bar"
+			  :name          "Work"
+			  :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
+					       (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
 
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
