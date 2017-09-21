@@ -165,47 +165,40 @@
   (imagemagick-register-types))
 
 (defun unread-messages-query (account-definitions)
-  (let* ((email-addresses (mapcar #'account-email-address account-definitions))
-	 (maildirs (mapcar (lambda (email-address) (concat "maildir:/" email-address "/INBOX")) email-addresses))
-	 (joined-maildirs (mapconcat 'identity maildirs " OR ")))
+  (let* ((inboxes (mapcar (lambda (one-account) (concat "maildir": (account-inbox one-account))) account-definitions))
+	 (joined-maildirs (mapconcat 'identity inboxes " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
-(defun ~make-context-maildir-shortcuts (folders email-address)
-  (let* ((inbox-shortcut (cons (concat "/" email-address "/INBOX") ?i))
+(defun ~make-context-maildir-shortcuts (one-account)
+  (let* ((inbox-shortcut (cons (account-inbox one-account) ?i))
 	 (folders-shortcuts (mapcar (lambda (folder)
-				      (cons (concat "/" email-address (folder-maildir folder)) (folder-shortcut folder)))
-				    folders)))
+				      (cons (folder-full-maildir folder) (folder-shortcut folder)))
+				    (account-folders one-account))))
     (cons inbox-shortcut folders-shortcuts)))
 
-(defun ~make-context-vars (folders email-address)
-  (list (cons 'mu4e-drafts-folder (concat "/" email-address "/[Gmail].Drafts"))
-	(cons 'mu4e-refile-folder (concat "/" email-address "/[Gmail].Archive"))
-	(cons 'mu4e-sent-folder   (concat "/" email-address "/[Gmail].Sent Mail"))
-	(cons 'mu4e-trash-folder  (concat "/" email-address "/[Gmail].Trash"))
-	(cons 'smtpmail-smtp-user email-address)
-	(cons 'user-mail-address  email-address)
-	(cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts folders email-address))))
-
-(defun make-account-context (one-account-definition)
-  (let* ((context-name (account-name one-account-definition))
-	 (folders (account-folders one-account-definition)))
-    (lexical-let ((email-address (account-email-address one-account-definition)))
+(defun make-account-context (one-account)
+  (let* ((context-name (account-name one-account))
+	 (folders (account-folders one-account)))
+    (lexical-let ((email-address (account-email-address one-account)))
       (make-mu4e-context
        :name context-name
        :match-func (lambda (message) (when message
 				       (string-prefix-p
 					(concat "/" email-address "/")
 					(mu4e-message-field message :maildir))))
-       :vars (~make-context-vars folders email-address)))))
-
-(defun ~make-bookmark-for-folder (folder email-address)
-  (make-mu4e-bookmark
-   :name (folder-name folder)
-   :query (concat "maildir:/" email-address (folder-maildir folder))
-   :key (folder-shortcut folder)))
+       :vars   (list (cons 'mu4e-drafts-folder (account-drafts one-account))
+		     (cons 'mu4e-refile-folder (account-refile one-account))
+		     (cons 'mu4e-sent-folder   (account-sent one-account))
+		     (cons 'mu4e-trash-folder  (account-trash one-account))
+		     (cons 'smtpmail-smtp-user (account-email-address one-account))
+		     (cons 'user-mail-address  (account-email-address one-account))
+		     (cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts one-account)))))))
 
 (defun ~make-bookmarks-for-account (one-account-definition)
-  (mapcar (lambda (folder) (~make-bookmark-for-folder folder (account-email-address one-account-definition)))
+  (mapcar (lambda (folder) (make-mu4e-bookmark
+			    :name (folder-name folder)
+			    :query (concat "maildir:" (folder-full-maildir folder))
+			    :key (folder-shortcut folder))
 	  (account-folders one-account-definition)))
 
 (defun make-bookmarks (account-definitions)
@@ -216,9 +209,23 @@
 	 (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
     (cons unread-messages-bookmark bookmarks)))
 
+(defun compute-account-definitions-fields (account-definitions)
+  (seq-do (lambda (one-account)
+	    (lexical-let ((email-address (account-email-address one-account)))
+	      (progn
+		(setf (account-inbox one-account) (concat "/" email-address "/INBOX"))
+		(setf (account-drafts one-account) (concat "/" email-address "/[Gmail].Drafts"))
+		(setf (account-refile one-account) (concat "/" email-address "/[Gmail].Archive"))
+		(setf (account-sent one-account) (concat "/" email-address "/[Gmail].Sent Mail"))
+		(setf (account-trash one-account) (concat "/" email-address "/[Gmail].Trash"))
+		(seq-do (lambda (one-folder)
+			  (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
+			(account-folders one-account)))))
+	  account-definitions))
+
 ;; Structures
-(cl-defstruct folder name maildir shortcut)
-(cl-defstruct account email-address name folders)
+(cl-defstruct folder name maildir shortcut full-maildir)
+(cl-defstruct account email-address name folders inbox drafts refile sent trash)
 
 ;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
@@ -231,6 +238,8 @@
 			  :name          "Work"
 			  :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
 					       (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
+
+(compute-account-definitions-fields *ACCOUNT-DEFINITIONS*)
 
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
