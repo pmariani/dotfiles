@@ -164,21 +164,18 @@
 (when (fboundp 'imagemagick-register-types)
   (imagemagick-register-types))
 
-(defun build-maildir-clause (email-address maildir)
-  (concat "maildir:/" email-address maildir))
-
 (defun unread-messages-query (account-definitions)
   (let* ((email-addresses (mapcar #'account-email-address account-definitions))
-	 (maildirs (mapcar (lambda (email-address) (build-maildir-clause email-address "/INBOX")) email-addresses))
+	 (maildirs (mapcar (lambda (email-address) (concat "maildir:/" email-address "/INBOX")) email-addresses))
 	 (joined-maildirs (mapconcat 'identity maildirs " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
 (defun ~make-context-maildir-shortcuts (folders email-address)
   (let* ((inbox-shortcut (cons (concat "/" email-address "/INBOX") ?i))
-	 (dynamic-shortcuts (mapcar (lambda (folder)
+	 (folders-shortcuts (mapcar (lambda (folder)
 				      (cons (concat "/" email-address (folder-maildir folder)) (folder-shortcut folder)))
 				    folders)))
-    (cons inbox-shortcut dynamic-shortcuts)))
+    (cons inbox-shortcut folders-shortcuts)))
 
 (defun ~make-context-vars (folders email-address)
   (list (cons 'mu4e-drafts-folder (concat "/" email-address "/[Gmail].Drafts"))
@@ -189,7 +186,7 @@
 	(cons 'user-mail-address  email-address)
 	(cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts folders email-address))))
 
-(defun ~make-context (one-account-definition)
+(defun make-account-context (one-account-definition)
   (let* ((context-name (account-name one-account-definition))
 	 (folders (account-folders one-account-definition)))
     (lexical-let ((email-address (account-email-address one-account-definition)))
@@ -201,13 +198,10 @@
 					(mu4e-message-field message :maildir))))
        :vars (~make-context-vars folders email-address)))))
 
-(defun make-contexts (account-definitions)
-  (mapcar #'~make-context account-definitions))
-
 (defun ~make-bookmark-for-folder (folder email-address)
   (make-mu4e-bookmark
    :name (folder-name folder)
-   :query (build-maildir-clause email-address (folder-maildir folder))
+   :query (concat "maildir:/" email-address (folder-maildir folder))
    :key (folder-shortcut folder)))
 
 (defun ~make-bookmarks-for-account (one-account-definition)
@@ -252,8 +246,8 @@
   (customize-set-variable 'smtpmail-smtp-service        587)
   (customize-set-variable 'smtpmail-stream-type         'starttls)
   (customize-set-variable 'message-kill-buffer-on-exit  t)
-  (customize-set-variable 'mu4e-bookmarks (make-bookmarks *ACCOUNT-DEFINITIONS*))
-  (customize-set-variable 'mu4e-contexts (make-contexts *ACCOUNT-DEFINITIONS*))
+  (customize-set-variable 'mu4e-bookmarks               (make-bookmarks *ACCOUNT-DEFINITIONS*))
+  (customize-set-variable 'mu4e-contexts                (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
   (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t))
 
 (use-package mu4e-alert
