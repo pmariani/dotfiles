@@ -143,7 +143,7 @@
 (customize-set-variable 'org-capture-templates
 			'(
 			  ("n" "Captured Note" entry (file+headline org-default-notes-file "Captured Notes") "")))
-(customize-save-variable 'epg-gpg-program "/usr/local/bin/gpg2") ;; add pinentry-mode loopback to ~/.gnupg/gpg.conf
+(customize-set-variable 'epg-gpg-program "/usr/local/bin/gpg2") ;; add pinentry-mode loopback to ~/.gnupg/gpg.conf
 (customize-set-variable 'org-crypt-key "")
 (customize-set-variable 'org-tags-exclude-from-inheritance '("crypt"))
 
@@ -157,12 +157,17 @@
 ;; MU4E ;;
 ;;;;;;;;;;
 ;; Had to manually edit offlineimap to force it to use python2.7
-
 (require 'cl-lib)
 
 ;;; Helper functions
 (when (fboundp 'imagemagick-register-types)
   (imagemagick-register-types))
+
+(defun mac-open-ff (url &optional _)
+  (start-process (concat "opening in firefox " url) nil "open" "-a" "Firefox" url))
+
+(defun mac-open-chrome (url &optional _)
+  (start-process (concat "opening in chrome" url) nil "open" "-a" "Google Chrome" url))
 
 (defun unread-messages-query (account-definitions)
   (let* ((inboxes (mapcar (lambda (one-account) (concat "maildir:" (account-inbox one-account))) account-definitions))
@@ -179,9 +184,11 @@
 (defun make-account-context (one-account)
   (let* ((context-name (account-name one-account))
 	 (folders (account-folders one-account)))
-    (lexical-let ((email-address (account-email-address one-account)))
+    (lexical-let ((email-address (account-email-address one-account))
+		  (browser-func (account-browser-func one-account)))
       (make-mu4e-context
        :name context-name
+       :enter-func (lambda () (customize-set-variable 'browse-url-browser-function  browser-func))
        :match-func (lambda (message) (when message
 				       (string-prefix-p
 					(concat "/" email-address "/")
@@ -211,7 +218,7 @@
 
 ;; Structures
 (cl-defstruct folder name maildir shortcut full-maildir)
-(cl-defstruct account email-address name folders inbox drafts refile sent trash)
+(cl-defstruct account email-address name folders inbox drafts refile sent trash browser-func)
 
 (defun compute-account-definitions-fields (account-definitions)
   (seq-do (lambda (one-account)
@@ -231,11 +238,13 @@
 (setq *ACCOUNT-DEFINITIONS*
       (list (make-account :email-address "foo"
 			  :name          "Personal"
+			  :browser-func  'mac-open-ff
 			  :folders       (list (make-folder :name "BJJ log"       :maildir "/[Gmail].bjj_log"       :shortcut ?b)
 					       (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
 					       (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
 	    (make-account :email-address "bar"
 			  :name          "Work"
+			  :browser-func  'mac-open-chrome
 			  :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
 					       (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
 
@@ -244,9 +253,10 @@
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
   :config
+  (customize-set-variable 'send-mail-function           'smtpmail-send-it)
   (customize-set-variable 'mu4e-maildir                 "~/.Mail")
   (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
-  (customize-set-variable 'mu4e-sent-messages-behavior 'delete)
+  (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
   (customize-set-variable 'mu4e-show-images             t)
   (customize-set-variable 'mu4e-update-interval         300)
   (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
