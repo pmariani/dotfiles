@@ -101,8 +101,11 @@
   :config
   (add-hook 'elpy-mode-hook (lambda ()
 			      (hs-minor-mode t)
-			      (set-fill-column 100)))
+			      (set-fill-column 100)
+			      (font-lock-add-keywords nil
+						      '(("\\<\\(\\(FIXME\\)\\|\\(TODO\\)\\|\\(NOTE\\)\\):" 1 font-lock-warning-face prepend)))))
   (elpy-enable))
+
 (customize-set-variable 'elpy-disable-backend-error-display nil)
 
 
@@ -277,3 +280,10 @@
   (mu4e-alert-set-default-style 'notifier)
   (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
   (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display))
+
+;;;;;;;;;;;;
+;; Racket ;;
+;;;;;;;;;;;;
+
+(use-package racket-mode
+  :ensure t)
