@@ -4,9 +4,9 @@
 (setq package-enable-at-startup nil)
 
 (add-to-list 'package-archives
-	     '("melpa" . "https://melpa.org/packages/"))
+             '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives
-	     '("elpy" . "http://jorgenschaefer.github.io/packages/"))
+             '("elpy" . "http://jorgenschaefer.github.io/packages/"))
 
 (package-initialize)
 
@@ -44,6 +44,10 @@
 (global-unset-key (kbd "s-t"))  ;; AppleKey-t: ns-popup-font-panel
 (global-unset-key (kbd "C-t"))  ;; Transpose chars
 
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (customize-set-variable 'indent-tabs-mode nil)))
+
 (use-package dracula-theme
   :ensure t
   :config (set-cursor-color "magenta"))
@@ -56,8 +60,8 @@
 
 (use-package ido
   :init (progn
-	  (customize-set-variable 'ido-enable-flex-matching t)
-	  (customize-set-variable 'ido-everywhere t))
+          (customize-set-variable 'ido-enable-flex-matching t)
+          (customize-set-variable 'ido-everywhere t))
   :config (ido-mode 1))
 
 (use-package tramp
@@ -84,9 +88,9 @@
 
 (use-package dired
   :init (progn
-	  (add-hook 'after-init-hook '(lambda () (require 'dired-x)))
-	  (customize-set-variable 'dired-omit-files "^\\.?#\\|^\\.$\\|^__pycache__$")
-	  (setq dired-omit-mode t)))
+          (add-hook 'after-init-hook '(lambda () (require 'dired-x)))
+          (customize-set-variable 'dired-omit-files "^\\.?#\\|^\\.$\\|^__pycache__$")
+          (setq dired-omit-mode t)))
 
 (use-package json-mode
   :ensure t)
@@ -105,22 +109,22 @@
 (use-package elpy
   :ensure t
   :init (progn
-	  (setq elpy-modules '(elpy-module-company
-			       elpy-module-eldoc
-			       elpy-module-highlight-indentation
-			       elpy-module-pyvenv
-			       elpy-module-flymake
-			       elpy-module-sane-defaults)))
+          (setq elpy-modules '(elpy-module-company
+                               elpy-module-eldoc
+                               elpy-module-highlight-indentation
+                               elpy-module-pyvenv
+                               elpy-module-flymake
+                               elpy-module-sane-defaults)))
 
   :config (progn
-	    (add-hook 'elpy-mode-hook (lambda ()
-					(pyvenv-mode t)
-					(hs-minor-mode t)
-					(set-fill-column 100)
-					(font-lock-add-keywords nil
-								'(("\\<\\(\\(FIXME\\)\\|\\(TODO\\)\\|\\(NOTE\\)\\):" 1 font-lock-warning-face prepend)))))
-	    (customize-set-variable 'elpy-disable-backend-error-display nil)
-	    (elpy-enable)))
+            (add-hook 'elpy-mode-hook (lambda ()
+                                        (pyvenv-mode t)
+                                        (hs-minor-mode t)
+                                        (set-fill-column 100)
+                                        (font-lock-add-keywords nil
+                                                                '(("\\<\\(\\(FIXME\\)\\|\\(TODO\\)\\|\\(NOTE\\)\\):" 1 font-lock-warning-face prepend)))))
+            (customize-set-variable 'elpy-disable-backend-error-display nil)
+            (elpy-enable)))
 
 (defun copy-region-to-os-pasteboard ()
   (interactive)
@@ -157,7 +161,7 @@
 
 (customize-set-variable 'org-default-notes-file "~/org/notes.org")
 (customize-set-variable 'org-capture-templates '(
-						 ("n" "Captured Note" entry (file+headline org-default-notes-file "Captured Notes") "")))
+                                                 ("n" "Captured Note" entry (file+headline org-default-notes-file "Captured Notes") "")))
 (customize-set-variable 'epg-gpg-program "/usr/local/bin/gpg2") ;; add pinentry-mode loopback to ~/.gnupg/gpg.conf
 (customize-set-variable 'org-crypt-key "")
 (customize-set-variable 'org-tags-exclude-from-inheritance '("crypt"))
@@ -183,49 +187,49 @@
 
 (defun unread-messages-query (account-definitions)
   (let* ((inboxes (mapcar (lambda (one-account) (concat "maildir:" (account-inbox one-account))) account-definitions))
-	 (joined-maildirs (mapconcat 'identity inboxes " OR ")))
+         (joined-maildirs (mapconcat 'identity inboxes " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
 (defun ~make-context-maildir-shortcuts (one-account)
   (let* ((inbox-shortcut (cons (account-inbox one-account) ?i))
-	 (folders-shortcuts (mapcar (lambda (folder)
-				      (cons (folder-full-maildir folder) (folder-shortcut folder)))
-				    (account-folders one-account))))
+         (folders-shortcuts (mapcar (lambda (folder)
+                                      (cons (folder-full-maildir folder) (folder-shortcut folder)))
+                                    (account-folders one-account))))
     (cons inbox-shortcut folders-shortcuts)))
 
 (defun make-account-context (one-account)
   (let* ((context-name (account-name one-account))
-	 (folders (account-folders one-account)))
+         (folders (account-folders one-account)))
     (lexical-let ((email-address (account-email-address one-account))
-		  (browser-func (account-browser-func one-account)))
+                  (browser-func (account-browser-func one-account)))
       (make-mu4e-context
        :name context-name
        :enter-func (lambda () (customize-set-variable 'browse-url-browser-function  browser-func))
        :match-func (lambda (message) (when message
-				       (string-prefix-p
-					(concat "/" email-address "/")
-					(mu4e-message-field message :maildir))))
+                                       (string-prefix-p
+                                        (concat "/" email-address "/")
+                                        (mu4e-message-field message :maildir))))
        :vars   (list (cons 'mu4e-drafts-folder (account-drafts one-account))
-		     (cons 'mu4e-refile-folder (account-refile one-account))
-		     (cons 'mu4e-sent-folder   (account-sent one-account))
-		     (cons 'mu4e-trash-folder  (account-trash one-account))
-		     (cons 'smtpmail-smtp-user (account-email-address one-account))
-		     (cons 'user-mail-address  (account-email-address one-account))
-		     (cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts one-account)))))))
+                     (cons 'mu4e-refile-folder (account-refile one-account))
+                     (cons 'mu4e-sent-folder   (account-sent one-account))
+                     (cons 'mu4e-trash-folder  (account-trash one-account))
+                     (cons 'smtpmail-smtp-user (account-email-address one-account))
+                     (cons 'user-mail-address  (account-email-address one-account))
+                     (cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts one-account)))))))
 
 (defun ~make-bookmarks-for-account (one-account-definition)
   (mapcar (lambda (folder) (make-mu4e-bookmark
-			    :name (folder-name folder)
-			    :query (concat "maildir:" (folder-full-maildir folder))
-			    :key (folder-shortcut folder)))
-	  (account-folders one-account-definition)))
+                            :name (folder-name folder)
+                            :query (concat "maildir:" (folder-full-maildir folder))
+                            :key (folder-shortcut folder)))
+          (account-folders one-account-definition)))
 
 (defun make-bookmarks (account-definitions)
   (let* ((unread-messages-bookmark (make-mu4e-bookmark
-				    :name  "Unread messages"
-				    :query (unread-messages-query account-definitions)
-				    :key ?u))
-	 (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
+                                    :name  "Unread messages"
+                                    :query (unread-messages-query account-definitions)
+                                    :key ?u))
+         (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
     (cons unread-messages-bookmark bookmarks)))
 
 ;; Structures
@@ -234,61 +238,61 @@
 
 (defun compute-account-definitions-fields (account-definitions)
   (seq-do (lambda (one-account)
-	    (let ((email-address (account-email-address one-account)))
-	      (progn
-		(setf (account-inbox one-account) (concat "/" email-address "/INBOX"))
-		(setf (account-drafts one-account) (concat "/" email-address "/[Gmail].Drafts"))
-		(setf (account-refile one-account) (concat "/" email-address "/[Gmail].Archive"))
-		(setf (account-sent one-account) (concat "/" email-address "/[Gmail].Sent Mail"))
-		(setf (account-trash one-account) (concat "/" email-address "/[Gmail].Trash"))
-		(seq-do (lambda (one-folder)
-			  (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
-			(account-folders one-account)))))
-	  account-definitions))
+            (let ((email-address (account-email-address one-account)))
+              (progn
+                (setf (account-inbox one-account) (concat "/" email-address "/INBOX"))
+                (setf (account-drafts one-account) (concat "/" email-address "/[Gmail].Drafts"))
+                (setf (account-refile one-account) (concat "/" email-address "/[Gmail].Archive"))
+                (setf (account-sent one-account) (concat "/" email-address "/[Gmail].Sent Mail"))
+                (setf (account-trash one-account) (concat "/" email-address "/[Gmail].Trash"))
+                (seq-do (lambda (one-folder)
+                          (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
+                        (account-folders one-account)))))
+          account-definitions))
 
 ;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
       (list (make-account :email-address "foo"
-			  :name          "Personal"
-			  :browser-func  'mac-open-ff
-			  :folders       (list (make-folder :name "BJJ log"       :maildir "/[Gmail].bjj_log"       :shortcut ?b)
-					       (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
-					       (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
-	    (make-account :email-address "bar"
-			  :name          "Work"
-			  :browser-func  'mac-open-chrome
-			  :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
-					       (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
+                          :name          "Personal"
+                          :browser-func  'mac-open-ff
+                          :folders       (list (make-folder :name "BJJ log"       :maildir "/[Gmail].bjj_log"       :shortcut ?b)
+                                               (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
+                                               (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
+            (make-account :email-address "bar"
+                          :name          "Work"
+                          :browser-func  'mac-open-chrome
+                          :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
+                                               (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
 
 (compute-account-definitions-fields *ACCOUNT-DEFINITIONS*)
 
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
   :config (progn
-	    (customize-set-variable 'send-mail-function           'smtpmail-send-it)
-	    (customize-set-variable 'mu4e-maildir                 "~/.Mail")
-	    (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
-	    (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
-	    (customize-set-variable 'mu4e-show-images             t)
-	    (customize-set-variable 'mu4e-update-interval         300)
-	    (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
-	    (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
-	    (customize-set-variable 'user-full-name               "Pierre Mariani")
-	    (customize-set-variable 'smtpmail-smtp-service        587)
-	    (customize-set-variable 'smtpmail-stream-type         'starttls)
-	    (customize-set-variable 'message-kill-buffer-on-exit  t)
-	    (customize-set-variable 'mu4e-bookmarks               (make-bookmarks *ACCOUNT-DEFINITIONS*))
-	    (customize-set-variable 'mu4e-contexts                (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
-	    (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t)))
+            (customize-set-variable 'send-mail-function           'smtpmail-send-it)
+            (customize-set-variable 'mu4e-maildir                 "~/.Mail")
+            (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
+            (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
+            (customize-set-variable 'mu4e-show-images             t)
+            (customize-set-variable 'mu4e-update-interval         300)
+            (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
+            (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
+            (customize-set-variable 'user-full-name               "Pierre Mariani")
+            (customize-set-variable 'smtpmail-smtp-service        587)
+            (customize-set-variable 'smtpmail-stream-type         'starttls)
+            (customize-set-variable 'message-kill-buffer-on-exit  t)
+            (customize-set-variable 'mu4e-bookmarks               (make-bookmarks *ACCOUNT-DEFINITIONS*))
+            (customize-set-variable 'mu4e-contexts                (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
+            (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t)))
 
 (use-package mu4e-alert
   :ensure t
   :after mu4e
   :init (progn
-	  (customize-set-variable 'mu4e-alert-interesting-mail-query (unread-messages-query *ACCOUNT-DEFINITIONS*))
-	  (mu4e-alert-set-default-style 'notifier)
-	  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
-	  (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)))
+          (customize-set-variable 'mu4e-alert-interesting-mail-query (unread-messages-query *ACCOUNT-DEFINITIONS*))
+          (mu4e-alert-set-default-style 'notifier)
+          (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+          (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)))
 
 ;;;;;;;;;;;;
 ;; more packages ;;
@@ -304,10 +308,9 @@
 (use-package paredit
   :ensure t
   :config (progn
-	    (autoload 'enable-paredit-mode "paredit")
-	    (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)))
+            (autoload 'enable-paredit-mode "paredit")
+            (add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)))
 
 (use-package mode-icons
   :ensure t
   :config (mode-icons-mode t))
-
