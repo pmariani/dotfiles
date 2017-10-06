@@ -88,7 +88,7 @@
 
 (use-package dired
   :init (progn
-          (add-hook 'after-init-hook '(lambda () (require 'dired-x)))
+          (add-hook 'after-init-hook (lambda () (require 'dired-x)))
           (customize-set-variable 'dired-omit-files "^\\.?#\\|^\\.$\\|^__pycache__$")
           (setq dired-omit-mode t)))
 
@@ -269,20 +269,22 @@
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
   :config (progn
-            (customize-set-variable 'send-mail-function           'smtpmail-send-it)
-            (customize-set-variable 'mu4e-maildir                 "~/.Mail")
-            (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
-            (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
-            (customize-set-variable 'mu4e-show-images             t)
-            (customize-set-variable 'mu4e-update-interval         300)
-            (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
-            (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
-            (customize-set-variable 'user-full-name               "Pierre Mariani")
-            (customize-set-variable 'smtpmail-smtp-service        587)
-            (customize-set-variable 'smtpmail-stream-type         'starttls)
             (customize-set-variable 'message-kill-buffer-on-exit  t)
             (customize-set-variable 'mu4e-bookmarks               (make-bookmarks *ACCOUNT-DEFINITIONS*))
             (customize-set-variable 'mu4e-contexts                (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
+            (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
+            (customize-set-variable 'mu4e-html2text-command       "/usr/local/bin/w3m -T text/html")
+            (customize-set-variable 'mu4e-maildir                 "~/.Mail")
+            (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
+            (customize-set-variable 'mu4e-show-images             t)
+            (customize-set-variable 'mu4e-update-interval         300)
+            (customize-set-variable 'send-mail-function           'smtpmail-send-it)
+            (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
+            (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
+            (customize-set-variable 'smtpmail-smtp-service        587)
+            (customize-set-variable 'smtpmail-stream-type         'starttls)
+            (customize-set-variable 'user-full-name               "Pierre Mariani")
+            (add-hook 'mu4e-compose-mode-hook (lambda () (auto-fill-mode -1)))
             (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t)))
 
 (use-package mu4e-alert
@@ -314,3 +316,6 @@
 (use-package mode-icons
   :ensure t
   :config (mode-icons-mode t))
+
+;; Start it
+(mu4e)
