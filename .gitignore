@@ -8,3 +8,4 @@ eshell
 .emacs.desktop.lock
 network-security.data
 smex-items
+/email-addresses.el

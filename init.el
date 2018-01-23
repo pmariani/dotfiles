@@ -245,14 +245,16 @@
                         (account-folders one-account)))))
           account-definitions))
 
+(load-file  "~/.emacs.d/email-addresses.el")
+
 ;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
-      (list (make-account :email-address "foo"
+      (list (make-account :email-address (alist-get :perso email-addresses)
                           :name          "Personal"
                           :browser-func  'mac-open-perso
                           :folders       (list (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
                                                (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
-            (make-account :email-address "bar"
+            (make-account :email-address (alist-get :work email-addresses)
                           :name          "Work"
                           :browser-func  'mac-open-chrome
                           :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
