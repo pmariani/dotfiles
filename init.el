@@ -50,9 +50,6 @@
   :ensure t
   :config (set-cursor-color "magenta"))
 
-(use-package beacon
-  :ensure t)
-
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
 
@@ -119,14 +116,13 @@
 
 ;; python:
 ;; brew install python3
-;; virtualenv --python python3 ~/.emacs.d/python_venv
+;; python3.6 -m venv ~/.emacs.d/python_venv
 ;; source ~/.emacs.d/python_venv/bin/activate
 ;; pip install --upgrade pip
 ;; pip install jedi flake8 importmagic
 ;;
-;; in .dir-locals.el:
-;; ((python-mode
-;;  (pyvenv-activate . "~/.emacs.d/python_venv")))
+;; in ~/Code/.dir-locals.el:
+;; ((python-mode (pyvenv-activate . "~/.emacs.d/python_venv")))
 
 (use-package elpy
   :ensure t
@@ -163,7 +159,16 @@
 ;;;;;;;;;;
 ;; MU4E ;;
 ;;;;;;;;;;
-;; Had to manually edit offlineimap to force it to use python2.7
+
+;; Offlineimap is installed with brew.
+;; Update offlineimap to use python2 regardless of the current python interpreter in env.
+;;
+;; head `which offlineimap `
+;; #!/bin/bash
+;; PYTHONPATH="/usr/local/Cellar/offlineimap/7.1.5/libexec/vendor/lib/python2.7/site-packages" exec "/usr/local/Cellar/offlineimap/7.1.5/libexec/offlineimap.py" "$@"
+;;
+;; head /usr/local/Cellar/offlineimap/7.1.5/libexec/offlineimap.py
+;; #!/usr/bin/python  # This points to python 2 whereas the old line uses the env python
 
 ;;; Helper functions
 (when (fboundp 'imagemagick-register-types)
@@ -258,21 +263,22 @@
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu/mu4e/"
   :config (progn
-            (customize-set-variable 'message-kill-buffer-on-exit  t)
-            (customize-set-variable 'mu4e-bookmarks               (make-bookmarks *ACCOUNT-DEFINITIONS*))
-            (customize-set-variable 'mu4e-contexts                (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
-            (customize-set-variable 'mu4e-get-mail-command        "/usr/local/bin/offlineimap")
-            (customize-set-variable 'mu4e-html2text-command       "/usr/local/bin/w3m -T text/html")
-            (customize-set-variable 'mu4e-maildir                 "~/.Mail")
-            (customize-set-variable 'mu4e-sent-messages-behavior  'delete)
-            (customize-set-variable 'mu4e-show-images             t)
-            (customize-set-variable 'mu4e-update-interval         300)
-            (customize-set-variable 'send-mail-function           'smtpmail-send-it)
-            (customize-set-variable 'smtpmail-default-smtp-server "smtp.gmail.com")
-            (customize-set-variable 'smtpmail-smtp-server         "smtp.gmail.com")
-            (customize-set-variable 'smtpmail-smtp-service        587)
-            (customize-set-variable 'smtpmail-stream-type         'starttls)
-            (customize-set-variable 'user-full-name               "Pierre Mariani")
+            (customize-set-variable 'message-kill-buffer-on-exit     t)
+            (customize-set-variable 'mu4e-bookmarks                  (make-bookmarks *ACCOUNT-DEFINITIONS*))
+            (customize-set-variable 'mu4e-contexts                   (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
+            (customize-set-variable 'mu4e-get-mail-command           "/usr/local/bin/offlineimap")
+            (customize-set-variable 'mu4e-html2text-command          "/usr/local/bin/w3m -T text/html")
+            (customize-set-variable 'mu4e-maildir                    "~/.Mail")
+            (customize-set-variable 'mu4e-sent-messages-behavior     'delete)
+            (customize-set-variable 'mu4e-index-update-in-background t)
+            (customize-set-variable 'mu4e-show-images                t)
+            (customize-set-variable 'mu4e-update-interval            300)
+            (customize-set-variable 'send-mail-function              'smtpmail-send-it)
+            (customize-set-variable 'smtpmail-default-smtp-server    "smtp.gmail.com")
+            (customize-set-variable 'smtpmail-smtp-server            "smtp.gmail.com")
+            (customize-set-variable 'smtpmail-smtp-service           587)
+            (customize-set-variable 'smtpmail-stream-type            'starttls)
+            (customize-set-variable 'user-full-name                  "Pierre Mariani")
             (add-hook 'mu4e-compose-mode-hook (lambda () (auto-fill-mode -1)))
             (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t)))
 
