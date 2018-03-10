@@ -114,6 +114,16 @@
             ;; This is your old M-x.
             (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)))
 
+(use-package js
+  :config (progn
+            (customize-set-variable 'js-indent-level 2)))
+
+(use-package nyan-mode
+  :ensure t
+  :config (progn (nyan-mode 1)
+                 (customize-set-variable 'nyan-animate-nyancat t)
+                 (customize-set-variable 'nyan-wavy-trail t)))
+
 ;; python:
 ;; brew install python3
 ;; python3.6 -m venv ~/.emacs.d/python_venv
@@ -162,6 +172,7 @@
 
 ;; Offlineimap is installed with brew.
 ;; Update offlineimap to use python2 regardless of the current python interpreter in env.
+;; setup ~/.authinfo for smtp credentials
 ;;
 ;; head `which offlineimap `
 ;; #!/bin/bash
@@ -229,17 +240,30 @@
 
 ;; Structures
 (cl-defstruct folder name maildir shortcut full-maildir)
-(cl-defstruct account email-address name folders inbox drafts refile sent trash browser-func)
+(cl-defstruct account email-address type name folders inbox drafts refile sent trash browser-func)
+
+(setq provider-to-folders '((:gmail .  ((:inbox . "/INBOX")
+                                        (:draft . "/[Gmail].Drafts")
+                                        (:archive . "/[Gmail].Archive")
+                                        (:sent . "/[Gmail].Sent Mail")
+                                        (:trash . "/[Gmail].Trash")))
+                            (:yandex . ((:inbox . "/INBOX")
+                                        (:draft . "/Drafts")
+                                        (:archive . "/Archive")
+                                        (:sent . "/Sent")
+                                        (:trash . "/Trash")))))
 
 (defun compute-account-definitions-fields (account-definitions)
   (seq-do (lambda (one-account)
-            (let ((email-address (account-email-address one-account)))
+            (let* ((email-address (account-email-address one-account))
+                  (type (account-type one-account))
+                  (folder-map (alist-get type provider-to-folders)))
               (progn
-                (setf (account-inbox one-account) (concat "/" email-address "/INBOX"))
-                (setf (account-drafts one-account) (concat "/" email-address "/[Gmail].Drafts"))
-                (setf (account-refile one-account) (concat "/" email-address "/[Gmail].Archive"))
-                (setf (account-sent one-account) (concat "/" email-address "/[Gmail].Sent Mail"))
-                (setf (account-trash one-account) (concat "/" email-address "/[Gmail].Trash"))
+                (setf (account-inbox one-account) (concat "/" email-address (alist-get :inbox folder-map)))
+                (setf (account-drafts one-account) (concat "/" email-address (alist-get :draft folder-map)))
+                (setf (account-refile one-account) (concat "/" email-address (alist-get :archive folder-map)))
+                (setf (account-sent one-account) (concat "/" email-address (alist-get :sent folder-map)))
+                (setf (account-trash one-account) (concat "/" email-address (alist-get :trash folder-map)))
                 (seq-do (lambda (one-folder)
                           (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
                         (account-folders one-account)))))
@@ -250,11 +274,18 @@
 ;; Definitions
 (setq *ACCOUNT-DEFINITIONS*
       (list (make-account :email-address (alist-get :perso email-addresses)
+                          :type          :gmail
                           :name          "Personal"
                           :browser-func  'mac-open-perso
                           :folders       (list (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
                                                (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
+            (make-account :email-address (alist-get :torrents email-addresses)
+                          :type          :yandex
+                          :name          "Torrents"
+                          :browser-func  'mac-open-perso
+                          :folders       '())
             (make-account :email-address (alist-get :work email-addresses)
+                          :type          :gmail
                           :name          "Work"
                           :browser-func  'mac-open-chrome
                           :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
