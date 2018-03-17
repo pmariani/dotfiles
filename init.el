@@ -166,10 +166,10 @@
             (elpy-enable)))
 
 ;; Org mode
-(global-set-key (kbd "C-cl") 'org-store-link)
-(global-set-key (kbd "C-ca") 'org-agenda)
-(global-set-key (kbd "C-cc") 'org-capture)
-(global-set-key (kbd "C-cb") 'org-iswitchb)
+(global-set-key (kbd "C-c l") 'org-store-link)
+(global-set-key (kbd "C-c a") 'org-agenda)
+(global-set-key (kbd "C-c c") 'org-capture)
+(global-set-key (kbd "C-c b") 'org-iswitchb)
 
 (customize-set-variable 'org-default-notes-file "~/org/notes.org")
 (customize-set-variable 'org-capture-templates '(
@@ -226,7 +226,7 @@
                      (cons 'mu4e-trash-folder  (account-trash one-account))
                      (cons 'smtpmail-smtp-user (account-email-address one-account))
                      (cons 'user-mail-address  (account-email-address one-account))
-                     (cons 'mu4e-maildir-shortcuts '((inbox . ?i))))))))
+                     (cons 'mu4e-maildir-shortcuts `((,inbox . ?i))))))))
 
 (defun make-bookmarks (account-definitions)
   `(,(make-mu4e-bookmark
