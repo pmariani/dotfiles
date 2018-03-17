@@ -210,8 +210,7 @@
     (cons inbox-shortcut folders-shortcuts)))
 
 (defun make-account-context (one-account)
-  (let* ((context-name (account-name one-account))
-         (folders (account-folders one-account)))
+  (let* ((context-name (account-name one-account)))
     (lexical-let ((email-address (account-email-address one-account))
                   (browser-func (account-browser-func one-account)))
       (make-mu4e-context
@@ -229,24 +228,15 @@
                      (cons 'user-mail-address  (account-email-address one-account))
                      (cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts one-account)))))))
 
-(defun ~make-bookmarks-for-account (one-account-definition)
-  (mapcar (lambda (folder) (make-mu4e-bookmark
-                            :name (folder-name folder)
-                            :query (concat "maildir:" (folder-full-maildir folder))
-                            :key (folder-shortcut folder)))
-          (account-folders one-account-definition)))
-
 (defun make-bookmarks (account-definitions)
-  (let* ((unread-messages-bookmark (make-mu4e-bookmark
-                                    :name  "Unread messages"
-                                    :query (unread-messages-query account-definitions)
-                                    :key ?u))
-         (bookmarks (seq-mapcat #'~make-bookmarks-for-account account-definitions)))
-    (cons unread-messages-bookmark bookmarks)))
+  `(,(make-mu4e-bookmark
+      :name  "Unread messages"
+      :query (unread-messages-query account-definitions)
+      :key ?u)))
 
 ;; Structures
 (cl-defstruct folder name maildir shortcut full-maildir)
-(cl-defstruct account email-address type name folders inbox drafts refile sent trash browser-func)
+(cl-defstruct account email-address type name inbox drafts refile sent trash browser-func)
 
 (setq provider-to-folders '((:gmail .  ((:inbox . "/INBOX")
                                         (:draft . "/[Gmail].Drafts")
@@ -282,20 +272,15 @@
       (list (make-account :email-address (alist-get :perso email-addresses)
                           :type          :gmail
                           :name          "Personal"
-                          :browser-func  'mac-open-perso
-                          :folders       (list (make-folder :name "Workout log"   :maildir "/[Gmail].workout_log"   :shortcut ?w)
-                                               (make-folder :name "House remodel" :maildir "/[Gmail].house_remodel" :shortcut ?h)))
+                          :browser-func  'mac-open-perso)
             (make-account :email-address (alist-get :torrents email-addresses)
                           :type          :yandex
                           :name          "Torrents"
-                          :browser-func  'mac-open-perso
-                          :folders       '())
+                          :browser-func  'mac-open-perso)
             (make-account :email-address (alist-get :work email-addresses)
                           :type          :gmail
                           :name          "Work"
-                          :browser-func  'mac-open-chrome
-                          :folders       (list (make-folder :name "SOC 2"         :maildir "/[Gmail].soc"           :shortcut ?s)
-                                               (make-folder :name "Usage Service" :maildir "/[Gmail].usage_service" :shortcut ?U)))))
+                          :browser-func  'mac-open-chrome)))
 
 (compute-account-definitions-fields *ACCOUNT-DEFINITIONS*)
 
@@ -317,7 +302,7 @@
             (customize-set-variable 'mu4e-sent-messages-behavior     'delete)
             (customize-set-variable 'mu4e-show-images                t)
             (customize-set-variable 'mu4e-update-interval            120)
-            (customize-set-variable 'mu4e-headers-visible-lines      30)
+            (customize-set-variable 'mu4e-headers-visible-lines      20)
             (customize-set-variable 'mu4e-use-fancy-chars            t)
             (customize-set-variable 'send-mail-function              'smtpmail-send-it)
             (customize-set-variable 'smtpmail-default-smtp-server    "smtp.gmail.com")
