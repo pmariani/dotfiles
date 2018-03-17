@@ -46,6 +46,8 @@
 (global-unset-key (kbd "s-t"))  ;; AppleKey-t: ns-popup-font-panel
 (global-unset-key (kbd "C-t"))  ;; Transpose chars
 
+(global-set-key (kbd "C-x C-e") 'eval-print-last-sexp)
+
 (set-fill-column 130)
 (global-prettify-symbols-mode t)
 
@@ -130,6 +132,10 @@
                  (customize-set-variable 'nyan-animate-nyancat t)
                  (customize-set-variable 'nyan-wavy-trail t)))
 
+(use-package whitespace-cleanup-mode
+  :ensure t
+  :config (global-whitespace-cleanup-mode t))
+
 ;; python:
 ;; brew install python3
 ;; python3.6 -m venv ~/.emacs.d/python_venv
@@ -160,10 +166,10 @@
             (elpy-enable)))
 
 ;; Org mode
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cc" 'org-capture)
-(global-set-key "\C-cb" 'org-iswitchb)
+(global-set-key (kbd "C-cl") 'org-store-link)
+(global-set-key (kbd "C-ca") 'org-agenda)
+(global-set-key (kbd "C-cc") 'org-capture)
+(global-set-key (kbd "C-cb") 'org-iswitchb)
 
 (customize-set-variable 'org-default-notes-file "~/org/notes.org")
 (customize-set-variable 'org-capture-templates '(
@@ -180,7 +186,7 @@
 ;; Update offlineimap to use python2 regardless of the current python interpreter in env.
 ;; setup ~/.authinfo for smtp credentials
 ;;
-;; head `which offlineimap `
+;; head `which offlineimap`
 ;; #!/bin/bash
 ;; PYTHONPATH="/usr/local/Cellar/offlineimap/7.1.5/libexec/vendor/lib/python2.7/site-packages" exec "/usr/local/Cellar/offlineimap/7.1.5/libexec/offlineimap.py" "$@"
 ;;
@@ -202,17 +208,11 @@
          (joined-maildirs (mapconcat 'identity inboxes " OR ")))
     (concat "flag:unread AND (" joined-maildirs ")")))
 
-(defun ~make-context-maildir-shortcuts (one-account)
-  (let* ((inbox-shortcut (cons (account-inbox one-account) ?i))
-         (folders-shortcuts (mapcar (lambda (folder)
-                                      (cons (folder-full-maildir folder) (folder-shortcut folder)))
-                                    (account-folders one-account))))
-    (cons inbox-shortcut folders-shortcuts)))
-
 (defun make-account-context (one-account)
   (let* ((context-name (account-name one-account)))
     (lexical-let ((email-address (account-email-address one-account))
-                  (browser-func (account-browser-func one-account)))
+                  (browser-func (account-browser-func one-account))
+                  (inbox (account-inbox one-account)))
       (make-mu4e-context
        :name context-name
        :enter-func (lambda () (customize-set-variable 'browse-url-browser-function  browser-func))
@@ -226,7 +226,7 @@
                      (cons 'mu4e-trash-folder  (account-trash one-account))
                      (cons 'smtpmail-smtp-user (account-email-address one-account))
                      (cons 'user-mail-address  (account-email-address one-account))
-                     (cons 'mu4e-maildir-shortcuts (~make-context-maildir-shortcuts one-account)))))))
+                     (cons 'mu4e-maildir-shortcuts '((inbox . ?i))))))))
 
 (defun make-bookmarks (account-definitions)
   `(,(make-mu4e-bookmark
@@ -259,10 +259,7 @@
                 (setf (account-drafts one-account) (concat "/" email-address (alist-get :draft folder-map)))
                 (setf (account-refile one-account) (concat "/" email-address (alist-get :archive folder-map)))
                 (setf (account-sent one-account) (concat "/" email-address (alist-get :sent folder-map)))
-                (setf (account-trash one-account) (concat "/" email-address (alist-get :trash folder-map)))
-                (seq-do (lambda (one-folder)
-                          (setf (folder-full-maildir one-folder) (concat "/" email-address (folder-maildir one-folder))))
-                        (account-folders one-account)))))
+                (setf (account-trash one-account) (concat "/" email-address (alist-get :trash folder-map))))))
           account-definitions))
 
 (load-file  "~/.emacs.d/email-addresses.el")
