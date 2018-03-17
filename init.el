@@ -46,6 +46,9 @@
 (global-unset-key (kbd "s-t"))  ;; AppleKey-t: ns-popup-font-panel
 (global-unset-key (kbd "C-t"))  ;; Transpose chars
 
+(set-fill-column 130)
+(global-prettify-symbols-mode t)
+
 (use-package dracula-theme
   :ensure t
   :config (set-cursor-color "magenta"))
@@ -114,9 +117,12 @@
             ;; This is your old M-x.
             (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)))
 
-(use-package js
+(use-package js2-mode
+  :ensure t
   :config (progn
-            (customize-set-variable 'js-indent-level 2)))
+            (customize-set-variable 'js-indent-level 2)
+            (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+            (add-hook 'js2-mode-hook #'js2-imenu-extras-mode)))
 
 (use-package nyan-mode
   :ensure t
@@ -148,7 +154,6 @@
             (add-hook 'elpy-mode-hook (lambda ()
                                         (pyvenv-mode t)
                                         (hs-minor-mode t)
-                                        (set-fill-column 100)
                                         (font-lock-add-keywords nil
                                                                 '(("\\<\\(\\(FIXME\\)\\|\\(TODO\\)\\|\\(NOTE\\)\\):" 1 font-lock-warning-face prepend)))))
             (customize-set-variable 'elpy-disable-backend-error-display nil)
@@ -170,7 +175,8 @@
 ;; MU4E ;;
 ;;;;;;;;;;
 
-;; Offlineimap is installed with brew.
+;; brew install mu offlineimap
+
 ;; Update offlineimap to use python2 regardless of the current python interpreter in env.
 ;; setup ~/.authinfo for smtp credentials
 ;;
@@ -299,13 +305,20 @@
             (customize-set-variable 'message-kill-buffer-on-exit     t)
             (customize-set-variable 'mu4e-bookmarks                  (make-bookmarks *ACCOUNT-DEFINITIONS*))
             (customize-set-variable 'mu4e-contexts                   (mapcar #'make-account-context *ACCOUNT-DEFINITIONS*))
-            (customize-set-variable 'mu4e-get-mail-command           "/usr/local/bin/offlineimap")
+            (customize-set-variable 'mu4e-compose-dont-reply-to-self t)
+            (customize-set-variable 'mu4e-user-mail-address-list     `(,(alist-get :perso email-addresses)
+                                                                       ,(alist-get :torrents email-addresses)
+                                                                       ,(alist-get :work email-addresses)))
+            (customize-set-variable 'mu4e-get-mail-command           "true")
+            (customize-set-variable 'mu4e-headers-include-related    t)
             (customize-set-variable 'mu4e-html2text-command          "/usr/local/bin/w3m -T text/html")
-            (customize-set-variable 'mu4e-maildir                    "~/.Mail")
-            (customize-set-variable 'mu4e-sent-messages-behavior     'delete)
             (customize-set-variable 'mu4e-index-update-in-background t)
+            (customize-set-variable 'mu4e-maildir                    "~/.Mail2")
+            (customize-set-variable 'mu4e-sent-messages-behavior     'delete)
             (customize-set-variable 'mu4e-show-images                t)
-            (customize-set-variable 'mu4e-update-interval            300)
+            (customize-set-variable 'mu4e-update-interval            120)
+            (customize-set-variable 'mu4e-headers-visible-lines      30)
+            (customize-set-variable 'mu4e-use-fancy-chars            t)
             (customize-set-variable 'send-mail-function              'smtpmail-send-it)
             (customize-set-variable 'smtpmail-default-smtp-server    "smtp.gmail.com")
             (customize-set-variable 'smtpmail-smtp-server            "smtp.gmail.com")
