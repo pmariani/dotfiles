@@ -31,10 +31,8 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
-(set-frame-parameter (selected-frame) 'alpha '(90 . 75))  ;; transparency
-(add-to-list 'default-frame-alist '(alpha . (90 . 75)))  ;; transparency
-
-(customize-set-variable 'exec-path (append exec-path '("/usr/local/bin")))
+;; (set-frame-parameter (selected-frame) 'alpha '(90 . 75))  ;; transparency
+;; (add-to-list 'default-frame-alist '(alpha . (90 . 75)))  ;; transparency
 (customize-set-variable 'confirm-kill-emacs 'yes-or-no-p)
 (customize-set-variable 'sentence-end-double-space nil) ; Sentences end with one space
 (customize-set-variable 'visible-bell t)
@@ -51,9 +49,12 @@
 (set-fill-column 130)
 (global-prettify-symbols-mode t)
 
-(use-package dracula-theme
-  :ensure t
-  :config (set-cursor-color "magenta"))
+;; (use-package dracula-theme
+;;   :ensure t
+;;   :config (set-cursor-color "magenta"))
+
+;; (use-package poet-theme
+;;   :ensure t)
 
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
@@ -71,12 +72,6 @@
   :ensure t
   :bind ("C-x o" . ace-window))
 
-(use-package flycheck
-  :ensure t)
-
-(use-package flycheck-pyflakes
-  :ensure t)
-
 (use-package markdown-mode
   :ensure t)
 
@@ -84,7 +79,13 @@
   :ensure t)
 
 (use-package magit
-  :ensure t)
+  :ensure t
+  :bind ("C-x g" . magit-status))
+
+(use-package git-gutter
+  :ensure t
+  :config (global-git-gutter-mode 't)
+  :diminish git-gutter-mode)
 
 (use-package dired
   :init (progn
@@ -135,6 +136,19 @@
 (use-package whitespace-cleanup-mode
   :ensure t
   :config (global-whitespace-cleanup-mode t))
+
+(use-package exec-path-from-shell
+  :ensure t
+  :config (exec-path-from-shell-initialize))
+
+(use-package moody
+  :ensure t
+  :config
+  (setq x-underline-at-descent-line t)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode))
+
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 ;; python:
 ;; brew install python3
