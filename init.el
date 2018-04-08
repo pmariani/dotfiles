@@ -26,7 +26,6 @@
 (load custom-file)
 
 (column-number-mode t)
-(desktop-save-mode t)
 (show-paren-mode t)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
@@ -49,12 +48,9 @@
 (set-fill-column 130)
 (global-prettify-symbols-mode t)
 
-;; (use-package dracula-theme
-;;   :ensure t
-;;   :config (set-cursor-color "magenta"))
-
-;; (use-package poet-theme
-;;   :ensure t)
+(use-package dracula-theme
+  :ensure t
+  :config (set-cursor-color "magenta"))
 
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
@@ -332,6 +328,3 @@
           (mu4e-alert-set-default-style 'notifier)
           (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
           (add-hook 'after-init-hook #'mu4e-alert-enable-mode-line-display)))
-
-;; Start mu4e
-(mu4e)
