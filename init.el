@@ -222,7 +222,8 @@
   (let* ((context-name (account-name one-account)))
     (lexical-let ((email-address (account-email-address one-account))
                   (browser-func (account-browser-func one-account))
-                  (inbox (account-inbox one-account)))
+                  (inbox (account-inbox one-account))
+                  (archive (account-refile one-account)))
       (make-mu4e-context
        :name context-name
        :enter-func (lambda () (customize-set-variable 'browse-url-browser-function  browser-func))
@@ -236,7 +237,8 @@
                      (cons 'mu4e-trash-folder  (account-trash one-account))
                      (cons 'smtpmail-smtp-user (account-email-address one-account))
                      (cons 'user-mail-address  (account-email-address one-account))
-                     (cons 'mu4e-maildir-shortcuts `((,inbox . ?i))))))))
+                     (cons 'mu4e-maildir-shortcuts `((,inbox . ?i)
+                                                     (,archive . ?a))))))))
 
 (defun make-bookmarks (account-definitions)
   `(,(make-mu4e-bookmark
@@ -316,6 +318,12 @@
             (customize-set-variable 'smtpmail-smtp-server            "smtp.gmail.com")
             (customize-set-variable 'smtpmail-smtp-service           587)
             (customize-set-variable 'smtpmail-stream-type            'starttls)
+            (customize-set-variable 'mu4e-headers-fields '((:human-date . 12)
+                                                           (:flags . 4)
+                                                           (:mailing-list . 8)
+                                                           (:from . 18)
+                                                           (:subject . 60)
+                                                           (:maildir)))
             (customize-set-variable 'user-full-name                  "Pierre Mariani")
             (add-hook 'mu4e-compose-mode-hook (lambda () (auto-fill-mode -1)))
             (add-to-list 'mu4e-view-actions '("ViewInBrowser" . mu4e-action-view-in-browser) t)))
