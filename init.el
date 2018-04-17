@@ -34,7 +34,11 @@
 ;; (add-to-list 'default-frame-alist '(alpha . (90 . 75)))  ;; transparency
 (customize-set-variable 'confirm-kill-emacs 'yes-or-no-p)
 (customize-set-variable 'sentence-end-double-space nil) ; Sentences end with one space
-(customize-set-variable 'visible-bell t)
+(customize-set-variable 'visible-bell nil)
+
+(setq ring-bell-function (lambda ()
+                           (invert-face 'mode-line)
+                           (run-with-timer 0.1 nil 'invert-face 'mode-line)))
 
 (global-unset-key (kbd "C-z"))
 (global-unset-key (kbd "C-x C-z"))
@@ -76,7 +80,11 @@
 
 (use-package magit
   :ensure t
-  :bind ("C-x g" . magit-status))
+  :bind ("C-x g" . magit-status)
+  :config (progn
+            (setq magit-commit-show-diff nil)
+            (put 'magit-clean 'disabled nil)
+            (add-hook 'magit-status-sections-hook 'magit-insert-worktrees)))
 
 (use-package git-gutter
   :ensure t
@@ -227,10 +235,11 @@
       (make-mu4e-context
        :name context-name
        :enter-func (lambda () (customize-set-variable 'browse-url-browser-function  browser-func))
-       :match-func (lambda (message) (when message
-                                       (string-prefix-p
-                                        (concat "/" email-address "/")
-                                        (mu4e-message-field message :maildir))))
+       ;; that runs only when replying to messages
+       :match-func (lambda (msg) (when msg
+                              (string-prefix-p
+                               (concat "/" email-address "/")
+                               (mu4e-message-field msg :maildir))))
        :vars   (list (cons 'mu4e-drafts-folder (account-drafts one-account))
                      (cons 'mu4e-refile-folder (account-refile one-account))
                      (cons 'mu4e-sent-folder   (account-sent one-account))
