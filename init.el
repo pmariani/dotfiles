@@ -69,15 +69,21 @@
   :ensure t
   :config (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
 
-;; (use-package dracula-theme
-;;   :ensure t
-;;   :config (set-cursor-color "magenta"))
-
-(use-package constant-theme
+'(use-package dracula-theme
   :ensure t
-  :config (progn
-            (load-theme 'constant t)
-            (set-cursor-color "magenta")))
+  :config (set-cursor-color "magenta"))
+
+'(use-package adwaita-theme
+  :ensure t
+  :config (set-cursor-color "magenta"))
+
+'(use-package wombat-theme
+  :ensure t
+  :config (set-cursor-color "magenta"))
+
+(use-package poet-theme
+  :ensure t
+  :config (set-cursor-color "magenta"))
 
 
 (use-package ibuffer
@@ -164,7 +170,7 @@
             ;; This is your old M-x.
             (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)))
 
-(use-package nyan-mode
+'(use-package nyan-mode
   :ensure t
   :config (progn (nyan-mode 1)
                  (customize-set-variable 'nyan-animate-nyancat t)
@@ -205,3 +211,6 @@
                                                               "")))))
 
 (server-start)
+
+(provide 'init)
+;;; init.el ends here
