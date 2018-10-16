@@ -69,22 +69,25 @@
   :ensure t
   :config (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
 
-'(use-package dracula-theme
-  :ensure t
-  :config (set-cursor-color "magenta"))
+(eval-and-compile
+  (defvar-local beautiful-themes '(dracula-theme
+                                   creamsody-theme
+                                   warm-night-theme
+                                   purple-haze-theme
+                                   ample-theme
+                                   darktooth-theme))
 
-'(use-package adwaita-theme
-  :ensure t
-  :config (set-cursor-color "magenta"))
+  (defvar-local selected-theme (nth
+                                (random (length beautiful-themes))
+                              beautiful-themes))
+  (message (concat "Selecting " (symbol-name selected-theme)))
 
-'(use-package wombat-theme
-  :ensure t
-  :config (set-cursor-color "magenta"))
+  (defmacro enable-selected-theme ()
+    "Yeah yeah."
+    `(use-package ,selected-theme
+       :ensure t)))
 
-(use-package poet-theme
-  :ensure t
-  :config (set-cursor-color "magenta"))
-
+(enable-selected-theme)
 
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
@@ -184,12 +187,12 @@
   :ensure t
   :config (exec-path-from-shell-initialize))
 
-(use-package moody
+'(use-package moody
   :ensure t
-  :config
-  (setq x-underline-at-descent-line t)
-  (moody-replace-mode-line-buffer-identification)
-  (moody-replace-vc-mode))
+  :config (progn
+            (setq x-underline-at-descent-line t)
+            (moody-replace-mode-line-buffer-identification)
+            (moody-replace-vc-mode)))
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
