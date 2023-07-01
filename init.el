@@ -144,10 +144,16 @@
   (message "start debugging..")
   (shell-command ".\\start-debugging"))
 
+(defun pierre-compile ()
+  (interactive)
+  (let ((build-script-directory (locate-dominating-file buffer-file-name "build.bat")))
+    (if (null build-script-directory) (message "%s: BUILD SCRIPT NOT FOUND! Starting from file %s" real-this-command buffer-file-name)
+      (let ((my-compile-command (file-name-concat build-script-directory "build.bat")))
+        (message "%s: COMPILING %s" real-this-command my-compile-command)
+        (compile my-compile-command)))))
+
 (use-package cc-mode :init (progn
                              (customize-set-variable 'c-default-style "bsd")
-                             (customize-set-variable 'compilation-read-command nil)
-                             (customize-set-variable 'compile-command ".\\build")
                              (global-set-key (kbd "C-c C-/") 'comment-or-uncomment-region)
                              (global-set-key (kbd "<f1>") 'open-init.el)
                              (global-set-key (kbd "<f2>") 'hs-toggle-hiding)
@@ -156,7 +162,7 @@
                              (global-set-key (kbd "<f5>") 'start-debugging)
                              (global-set-key (kbd "<f6>") 'my-whitespace-cleanup)
                              (global-set-key (kbd "<f12>") 'imenu)
-                             (global-set-key (kbd "M-m") 'compile)))
+                             (global-set-key (kbd "M-m") 'pierre-compile)))
 
 (load-theme 'pierre)
 (global-hl-line-mode 1)
@@ -202,9 +208,6 @@
 (setq hs-allow-nesting t)
 
 (server-start)
-
-
-
 
 (provide '.emacs)
 ;;; .emacs ends here
