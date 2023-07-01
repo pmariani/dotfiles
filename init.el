@@ -19,9 +19,16 @@
 ;; shr-render-buffer to render HTML
 ;; M-x list-face-display and look for font-lock-X-face
 ;; hide-ifdef-toggle-shadowing
+;; now I can grep, maybe find-grep, etc...
 ;;; Code:
 
 (set-language-environment "UTF-8")
+
+(setq path-to-msys64-bins "s:\\msys64\\usr\\bin")
+(setenv "PATH" (format "%s;%s" path-to-msys64-bins (getenv "PATH")))
+;; There should be no need to run this as exec-path would be set from PATH, but can validate with (mapc 'print exec-path)
+;; Result: didn't work, setting explicitly.
+(add-to-list 'exec-path path-to-msys64-bins)
 
 (require 'cl-lib)
 (require 'package)
@@ -30,6 +37,8 @@
 
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
+
+
 
 (package-initialize)
 
