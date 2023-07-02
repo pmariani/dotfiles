@@ -38,8 +38,6 @@
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/"))
 
-
-
 (package-initialize)
 
 ;; Bootstrap use-package
@@ -113,9 +111,6 @@
 (global-display-line-numbers-mode)
 (setq display-line-numbers-type 'relative)
 
-(add-to-list 'default-frame-alist '(font . "consolas-11" ))
-(set-face-attribute 'default t :font "consolas-11" )
-
 (use-package ibuffer
   :bind ("C-x C-b" . ibuffer))
 
@@ -136,12 +131,6 @@
 (defun open-init.el ()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
-
-;; (defun set-screen-size ()
-;;   (interactive)
-;;   (when window-system
-;;     (set-frame-size (selected-frame) 150 40)
-;;     (set-frame-position (selected-frame) 20 0)))
 
 (defun my-whitespace-cleanup ()
   (interactive)
@@ -173,29 +162,14 @@
                              (global-set-key (kbd "<f12>") 'imenu)
                              (global-set-key (kbd "M-m") 'pierre-compile)))
 
-(load-theme 'pierre)
-(global-hl-line-mode 1)
 
-;; (use-package autumn-light-theme :ensure t)
-;; (use-package faff-theme :ensure t)
-;; (use-package forest-blue-theme :ensure t)
-;; (use-package material-theme :ensure t)
-;; (use-package nofrils-acme-theme :ensure t)
-;; (use-package poet-theme :ensure t)
-;; (use-package reykjavik-theme :ensure t)
-;; (use-package subatomic-theme :ensure t)
-;; (use-package toxi-theme :ensure t)
-;; (use-package zweilight-theme :ensure t)
+(add-hook 'prog-mode-hook (lambda () (hs-minor-mode)))
+(add-hook 'prog-mode-hook (lambda () (hide-ifdef-mode)))
 
-;; (use-package sublime-themes :ensure t)
-;;   :init (progn
-;;           ;; (load-theme 'junio)
-;;           ;; (load-theme 'fogus)
-;;           ;; (load-theme 'manoj-dark) (global-hl-line-mode 0)
-;;           ;; (load-theme 'granger)
-;;           ;; (load-theme 'wombat)
-;;           ;; (set-cursor-color "violet")
-;;           ))
+
+;;;;
+;; Theme and display related
+;;;;
 
 (defun highlight-todos ()
    (font-lock-add-keywords nil
@@ -207,8 +181,82 @@
                              ("\\<\\(NOTE\\):" 1 font-lock-doc-face t)
                              )))
 (add-hook 'prog-mode-hook 'highlight-todos)
-(add-hook 'prog-mode-hook (lambda () (hs-minor-mode)))
-(add-hook 'prog-mode-hook (lambda () (hide-ifdef-mode)))
+
+(add-to-list 'default-frame-alist '(font . "consolas-11" ))
+(set-face-attribute 'default t :font "consolas-11" )
+
+;; (defun set-screen-size ()
+;;   (interactive)
+;;   (when window-system
+;;     (set-frame-size (selected-frame) 150 40)
+;;     (set-frame-position (selected-frame) 20 0)))
+
+(use-package autumn-light-theme :ensure t)
+(use-package faff-theme :ensure t)
+(use-package forest-blue-theme :ensure t)
+(use-package material-theme :ensure t)
+(use-package nofrils-acme-theme :ensure t)
+(use-package poet-theme :ensure t)
+(use-package reykjavik-theme :ensure t)
+(use-package subatomic-theme :ensure t)
+(use-package toxi-theme :ensure t)
+(use-package zweilight-theme :ensure t)
+(use-package sublime-themes :ensure t)
+
+(defun theme-switcher ()
+  (setq-local pierre-current-theme-index -1)
+  (setq-local pierre-theme-candidates (custom-available-themes))
+  (defun quick-try-theme (offset)
+    (let* ((current-theme (nth pierre-current-theme-index pierre-theme-candidates))
+           (new-index (min (max (+ pierre-current-theme-index offset) 0) (- (length pierre-theme-candidates) 1)))
+           (new-theme (nth new-index pierre-theme-candidates)))
+      (progn
+        (disable-theme current-theme)
+        (load-theme new-theme t nil)
+        (setq pierre-current-theme-index new-index)
+        (message "NEW THEME %s" new-theme))))
+
+  (local-set-key (kbd "<f1>") (lambda () (interactive)(quick-try-theme -1)))
+  (local-set-key (kbd "<f2>") (lambda () (interactive)(quick-try-theme 1)))
+  (message "READY TO TRY SOME THEMES"))
+
+;; Eval this to try it out (no need to uncomment)
+;; (theme-switcher)
+
+;; (load-theme 'poet-dark t nil)
+;; (load-theme 'subatomic t nil)
+;; (load-theme 'graham t nil)
+;; (load-theme 'granger t nil)
+(load-theme 'toxi t nil) (global-hl-line-mode 1)
+
+
+;; (load-theme 'modus-vivendi t nil)
+;; (load-theme 'junio)
+;; (load-theme 'fogus)
+;; (load-theme 'manoj-dark) (global-hl-line-mode 0)
+;; (load-theme 'granger)
+;; (load-theme 'wombat)
+;; (load-theme 'pierre) (global-hl-line-mode 1)
+;; (set-cursor-color "violet")
+;; (global-hl-line-mode 0)
+;; (global-hl-line-mode 1)
+
+;; These were set for the pierre theme, I think
+;; (custom-set-faces
+;;  ;; custom-set-faces was added by Custom.
+;;  ;; If you edit it by hand, you could mess it up, so be careful.
+;;  ;; Your init file should contain only one such instance.
+;;  ;; If there is more than one, they won't work right.
+;;  '(dired-directory ((t (:foreground "MediumSeaGreen"))))
+;;  '(font-lock-comment-face ((t (:foreground "PaleGreen4" :slant italic))))
+;;  '(font-lock-variable-name-face ((t (:foreground "#699978"))))
+;;  '(hl-line ((t (:background "#003523" :extend t))))
+
+;;;;
+;; End of theme
+;;;;
+
+
 
 ;; The original value is "\f\\|[      ]*$", so we add the bullets (-), (+), and (*).
 ;; There is no need for "^" as the regexp is matched at the beginning of line.
@@ -217,6 +265,8 @@
 (setq hs-allow-nesting t)
 
 (server-start)
+
+(toggle-frame-fullscreen)
 
 (provide '.emacs)
 ;;; .emacs ends here
