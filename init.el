@@ -137,18 +137,13 @@
   (whitespace-cleanup)
   (message "cleaned whitespace.."))
 
-(defun start-debugging ()
+(defun pierre-locate-script (script-name fn)
   (interactive)
-  (message "start debugging..")
-  (shell-command ".\\start-debugging"))
-
-(defun pierre-compile ()
-  (interactive)
-  (let ((build-script-directory (locate-dominating-file buffer-file-name "build.bat")))
-    (if (null build-script-directory) (message "%s: BUILD SCRIPT NOT FOUND! Starting from file %s" real-this-command buffer-file-name)
-      (let ((my-compile-command (file-name-concat build-script-directory "build.bat")))
-        (message "%s: COMPILING %s" real-this-command my-compile-command)
-        (compile my-compile-command)))))
+  (let ((script-directory (locate-dominating-file buffer-file-name script-name)))
+    (if (null script-directory) (message "SCRIPT NOT FOUND! Starting from file %s" buffer-file-name)
+      (let ((full-script-path (file-name-concat script-directory script-name)))
+        (message "RUNNING %s %s" fn full-script-path)
+        (funcall fn full-script-path)))))
 
 (use-package cc-mode :init (progn
                              (customize-set-variable 'c-default-style "bsd")
@@ -157,15 +152,13 @@
                              (global-set-key (kbd "<f2>") 'hs-toggle-hiding)
                              (global-set-key (kbd "<f3>") 'hs-hide-all)
                              (global-set-key (kbd "<f4>") 'toggle-truncate-lines)
-                             (global-set-key (kbd "<f5>") 'start-debugging)
+                             (global-set-key (kbd "<f5>") (lambda () (interactive)(pierre-locate-script "start-debugging.bat" 'shell-command)))
                              (global-set-key (kbd "<f6>") 'my-whitespace-cleanup)
                              (global-set-key (kbd "<f12>") 'imenu)
-                             (global-set-key (kbd "M-m") 'pierre-compile)))
-
+                             (global-set-key (kbd "M-m")  (lambda () (interactive)(pierre-locate-script "build.bat"           'compile)))))
 
 (add-hook 'prog-mode-hook (lambda () (hs-minor-mode)))
 (add-hook 'prog-mode-hook (lambda () (hide-ifdef-mode)))
-
 
 ;;;;
 ;; Theme and display related
