@@ -220,7 +220,8 @@
 ;; (load-theme 'subatomic t nil)
 ;; (load-theme 'graham t nil)
 ;; (load-theme 'granger t nil)
-(load-theme 'toxi t nil) (global-hl-line-mode 1)
+;; (load-theme 'toxi t nil) (global-hl-line-mode 1)
+(load-theme 'poet-dark t nil) ;; Does not support resizing very well
 
 
 ;; (load-theme 'modus-vivendi t nil)
