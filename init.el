@@ -13,14 +13,57 @@
 ;; <f4> toggle-truncate-lines
 ;; <f5> start-debugging
 ;; <f6> my-whitespace-cleanup
-;; <f12> imenu
+
 ;; M-m compile
 ;; In ibuffer use comma (',') to rotate through different sorting
 ;; shr-render-buffer to render HTML
 ;; M-x list-face-display and look for font-lock-X-face
 ;; hide-ifdef-toggle-shadowing
 ;; now I can grep, maybe find-grep, etc...
-;;; Code:
+;; find-named-dired to find files in directory tree, if `find` is installed
+
+;;;; TAGS
+
+;; eshell, then  find . -regextype posix-extended -type f -regex ".*\.(c|cpp|h)" | c:/"Program Files"/Emacs/emacs-28.2/bin/etags.exe --declarations -
+;; Then M-. to find with XREF, M-, to come back
+;; M-? to find references
+;; (tags-reset-tags-table) when needing to load a new table (across restarts) for a new codebase for example.
+
+;; To use regexes in Emacs, look up Rx
+
+;;;; ORG
+
+;; Allows things like this in org mode
+;; #+ATTR_ORG: :width 200
+;; [[./images/typesofdevs.png]]
+;;
+;; Also add this anywhere in the buffer
+;; #+STARTUP: inlineimages
+
+;; C-c C-o to open link at point
+
+;;;; Debugging elisp
+;; Been using edebug
+
+;;;; Debugging C
+;; installing gdb with msys64 then pacman -s gdb
+;; then M-x gdb
+;; NOt working, don't want to debug
+
+
+;;;; BOOKMARKS and REGISTERS
+;; bookmarks: use to navigate to locations quickly across reboots
+;; C-x r l to list
+;; C-x r m <ret> to create
+
+;; registers: use to copy paste same value multiple times (kills overwrite last copied)
+;;; positions
+;; C-x r <SPC> R to add value of point in R
+;; C-x r j     R to jump to register R
+;;; text content
+;; C-x r s R Copy region into register R (‘copy-to-register’).
+;; C-x r i R Insert text from register R (‘insert-register’).
+
 
 (set-language-environment "UTF-8")
 
@@ -80,6 +123,8 @@
 (customize-set-variable 'sentence-end-double-space nil) ; Sentences end with one
                                                         ; space
 (customize-set-variable 'visible-bell nil)
+
+(customize-set-variable 'package-gnupghome-dir "/c/Users/Pierre/AppData/Roaming/.emacs.d/elpa/gnupg")
 
 (setq ring-bell-function (lambda ()
                            (invert-face 'mode-line)
@@ -154,7 +199,6 @@
                              (global-set-key (kbd "<f4>") 'toggle-truncate-lines)
                              (global-set-key (kbd "<f5>") (lambda () (interactive)(pierre-locate-script "start-debugging.bat" 'shell-command)))
                              (global-set-key (kbd "<f6>") 'my-whitespace-cleanup)
-                             (global-set-key (kbd "<f12>") 'imenu)
                              (global-set-key (kbd "M-m")  (lambda () (interactive)(pierre-locate-script "build.bat"           'compile)))))
 
 (add-hook 'prog-mode-hook (lambda () (hs-minor-mode)))
@@ -221,7 +265,7 @@
 ;; (load-theme 'graham t nil)
 ;; (load-theme 'granger t nil)
 ;; (load-theme 'toxi t nil) (global-hl-line-mode 1)
-(load-theme 'poet-dark t nil) ;; Does not support resizing very well
+(load-theme 'poet-dark t nil) (global-hl-line-mode 1);; Does not support resizing very well
 
 
 ;; (load-theme 'modus-vivendi t nil)
@@ -251,12 +295,61 @@
 ;;;;
 
 
+;;; MARK
+(defface mmv-face
+  '((t :background "maroon2" :foreground "white"))
+  "Face used for showing the mark's position.")
+
+(defvar-local mmv-mark-overlay nil
+  "The overlay for showing the mark's position.")
+
+(defvar-local mmv-is-mark-visible t
+  "The overlay is visible only when this variable's value is t.")
+
+(defun mmv-draw-mark (&rest _)
+  "Make the mark's position stand out by means of a one-character-long overlay.
+   If the value of variable `mmv-is-mark-visible' is nil, the mark will be
+   invisible."
+  (unless mmv-mark-overlay
+    (setq mmv-mark-overlay (make-overlay 0 0 nil t))
+    (overlay-put mmv-mark-overlay 'face 'mmv-face))
+  (let ((mark-position (mark t)))
+    (cond
+     ((null mark-position) (delete-overlay mmv-mark-overlay))
+     ((and (< mark-position (point-max))
+           (not (eq ?\n (char-after mark-position))))
+      (overlay-put mmv-mark-overlay 'after-string nil)
+      (move-overlay mmv-mark-overlay mark-position (1+ mark-position)))
+     (t
+      ; This branch is called when the mark is at the end of a line or at the
+      ; end of the buffer. We use a bit of trickery to avoid the higlight
+      ; extending from the mark all the way to the right end of the frame.
+      (overlay-put mmv-mark-overlay 'after-string
+                   (propertize " " 'face (overlay-get mmv-mark-overlay 'face)))
+      (move-overlay mmv-mark-overlay mark-position mark-position)))))
+
+(add-hook 'pre-redisplay-functions #'mmv-draw-mark)
+
+(defun mmv-toggle-mark-visibility ()
+  "Toggles the mark's visiblity and redraws it (whether invisible or visible)."
+  (interactive)
+  (setq mmv-is-mark-visible (not mmv-is-mark-visible))
+  (if mmv-is-mark-visible
+      (set-face-attribute 'mmv-face nil :background "maroon2" :foreground "white")
+    (set-face-attribute 'mmv-face nil :background 'unspecified :foreground 'unspecified))
+  (mmv-draw-mark))
+
+;;;; END OF MARK
+
+
 
 ;; The original value is "\f\\|[      ]*$", so we add the bullets (-), (+), and (*).
 ;; There is no need for "^" as the regexp is matched at the beginning of line.
 (setq paragraph-start "\f\\|[ \t]*$\\|[ \t]*[-+*] ")
 
 (setq hs-allow-nesting t)
+
+(setq org-image-actual-width nil)
 
 (server-start)
 
